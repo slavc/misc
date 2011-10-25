@@ -15,13 +15,13 @@
  */
 
 /*
- * xsetrootbg - background image setter for X.
+ * xsetbg - background image setter for X.
  *
  *
  * Loads the images specified on the command line and sets them as the
  * background for the default root window of X in one of the various modes.
  *
- * xsetrootbg can set the background for the whole virtual screen or for
+ * xsetbg can set the background for the whole virtual screen or for
  * individual Xinerama screens.
  *
  *
@@ -29,7 +29,7 @@
  *
  *
  * Compilation:
- *	cc -o xsetrootbg xsetrootbg.c \
+ *	cc -o xsetbg xsetbg.c \
  *	    $(pkg-config --cflags --libs x11 xinerama imlib2)
  */
 
@@ -44,6 +44,9 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/Xinerama.h>
 #include <Imlib2.h>
+
+#define DEFAULT_MODE		MODE_FILL
+#define DEFAULT_SCREEN_LIST	"all"
 
 struct rect {
 	int x;
@@ -64,25 +67,18 @@ static void		 init_imlib(Display *);
 static struct screen	*get_screens(Display *, int *);
 static int		 has_xinerama(Display *);
 static Imlib_Image	 get_bg(Display *);
+static void		 foreach_screen(Display *, Imlib_Image, const char *,
+			    struct screen *, int, const char *, int);
 static void		 blend(Imlib_Image, Imlib_Image, struct rect *, int);
 static void		 set_bg(Display *, Imlib_Image);
 
 int		 dflag;
-const char	*modes[] = {
-	"none",
-	"center",
-	"stretch",
-	"scale",
-	"zoom",
-	"tile",
-	NULL,
-};
-enum {
-	MODE_NONE,
+enum modes {
+	MODE_COPY,
 	MODE_CENTER,
 	MODE_STRETCH,
 	MODE_SCALE,
-	MODE_ZOOM,
+	MODE_FILL,
 	MODE_TILE,
 	MODE_INVALID,
 };
@@ -97,83 +93,64 @@ main(int argc, char **argv)
 	extern char	*optarg;
 	extern int	 optind;
 	int		 ch;
-	int		 mode = MODE_NONE;
+	int		 mode = DEFAULT_MODE;
 	int		 scr_no;
 	Imlib_Image	 image;
 	int		 i;
-	const char	*optstring = "hs:m:d";
+	char		*scr_list = DEFAULT_SCREEN_LIST;
+	char		*tok;
+
 
 	if (argc < 2)
 		usage();
-
-	while ((ch = getopt(argc, argv, optstring)) != -1)
-		if (ch == 'd')
-			++dflag;
-	optind = 1;
 
 	dpy = XOpenDisplay(NULL);
 	if (dpy == NULL)
 		errx(1, "XOpenDisplay");
 
+	for (i = 1; i < argc; ++i) {
+		if (!strcmp(argv[i], "-d"))
+			++dflag;
+		else if (!strcmp(argv[i], "-h"))
+			usage();
+		else if (!strcmp(argv[i], "-help"))
+			usage();
+		else if (!strcmp(argv[i], "--help"))
+			usage();
+	}
+
 	init_imlib(dpy);
 	screens = get_screens(dpy, &n_screens);
 	canvas = get_bg(dpy);
 
-	for (i = 0; /* empty */; ++i) {
-		scr_no = -2;
-		image = NULL;
-
-		while ((ch = getopt(argc, argv, optstring)) != -1) {
-			switch (ch) {
-			case 'h':
+	for (i = 1; i < argc; ++i) {
+		if (!strcmp(argv[i], "-d") ||
+		    !strcmp(argv[i], "-h") ||
+		    !strcmp(argv[i], "-help") ||
+		    !strcmp(argv[i], "--help"))
+			/* ignore; processed these earlier */;
+		else if (!strcmp(argv[i], "-copy"))
+			mode = MODE_COPY;
+		else if (!strcmp(argv[i], "-center"))
+			mode = MODE_CENTER;
+		else if (!strcmp(argv[i], "-stretch"))
+			mode = MODE_STRETCH;
+		else if (!strcmp(argv[i], "-scale"))
+			mode = MODE_SCALE;
+		else if (!strcmp(argv[i], "-fill"))
+			mode = MODE_FILL;
+		else if (!strcmp(argv[i], "-tile"))
+			mode = MODE_TILE;
+		else if (!strcmp(argv[i], "-screen")) {
+			if (++i >= argc)
 				usage();
-				break;
-			case 's':
-				scr_no = atoi(optarg);
-				break;
-			case 'm':
-				for (mode = 0; mode < MODE_INVALID; ++mode)
-					if (!strcmp(modes[mode], optarg))
-						break;
-				if (mode == MODE_INVALID)
-					usage();
-				break;
-			}
+			scr_list = argv[i];
+		} else { /* ah, this must be the image filename... */
+			if (scr_list == NULL)
+				scr_list = "all";
+			foreach_screen(dpy, canvas, scr_list,
+			    screens, n_screens, argv[i], mode);
 		}
-		argc -= optind;
-		argv += optind;
-
-		if (argc == 0) {
-			if (i == 0)
-				usage();
-			else
-				break;
-		}
-
-		optind = 1;
-
-		image = imlib_load_image(*argv);
-		if (image == NULL) {
-			warnx("%s: failed to load image", *argv);
-			continue;
-		}
-
-		if (scr_no == -2) {
-			/* screen number wasn't specified, blend onto
-			 * big virtual screen
-			 */
-			blend(image, canvas, &screens->rc, mode);
-		} else {
-			/* screen number "-1" is a special value, means
-			 * blend image to all screens
-			 */
-			for (scr = screens + 1; scr < screens + n_screens; ++scr)
-				if (scr->no == scr_no || scr_no == -1)
-					blend(image, canvas, &scr->rc, mode);
-		}
-
-		imlib_context_set_image(image);
-		imlib_free_image();
 	}
 
 	set_bg(dpy, canvas);
@@ -215,8 +192,9 @@ xcalloc(size_t nmemb, size_t size)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: xsetrootbg -h\n");
-	fprintf(stderr, "       xsetrootbg [-s <int>] [-m <none|center|stretch|scale|zoom|tile>] <imagefile>\n");
+	fprintf(stderr, "usage: xsetbg ([-screen <int|all|whole>] \\\n"
+			"              [-copy|-center|-stretch|-scale|-fill|-tile] \\\n"
+			"              <image>)*\n");
 	exit(1);
 }
 
@@ -310,6 +288,47 @@ get_bg(Display *dpy)
 }
 
 static void
+foreach_screen(Display *dpy, Imlib_Image canvas, const char *scr_list,
+    struct screen *screens, int n_screens, const char *filename, int mode)
+{
+	Imlib_Image	 img;
+	char		 buf[128], *tok;
+	struct screen	*scr;
+	int		 i;
+
+	img = imlib_load_image(filename);
+	if (img == NULL) {
+		warnx("%s: failed to load image", filename);
+		return;
+	}
+
+	strncpy(buf, scr_list, sizeof(buf));
+	buf[sizeof(buf)-1] = '\0';
+
+	for (tok = strtok(buf, " \t"); tok != NULL; tok = strtok(NULL, " \t")) {
+		if (!strcmp(tok, "all")) {
+			for (scr = screens + 1; scr < screens + n_screens; ++scr)
+				blend(img, canvas, &scr->rc, mode);
+		} else if (!strcmp(tok, "whole")) {
+			blend(img, canvas, &screens->rc, mode);
+		} else {
+			i = atoi(tok);
+			for (scr = screens + 1; scr < screens + n_screens; ++scr) {
+				if (scr->no == i) {
+					blend(img, canvas, &scr->rc, mode);
+					break;
+				}
+			}
+			if (scr >= screens + n_screens)
+				warnx("%s: no such screen", tok);
+		}
+	}
+
+	imlib_context_set_image(img);
+	imlib_free_image();
+}
+
+static void
 blend(Imlib_Image src, Imlib_Image dst, struct rect *cliprc, int mode)
 {
 	struct rect	 srcrc;
@@ -327,7 +346,7 @@ blend(Imlib_Image src, Imlib_Image dst, struct rect *cliprc, int mode)
 	srcrc.h = imlib_image_get_height();
 
 	switch (mode) {
-	case MODE_NONE:
+	case MODE_COPY:
 		dstrc.x = cliprc->x;
 		dstrc.y = cliprc->y;
 		dstrc.w = srcrc.w;
@@ -358,10 +377,10 @@ blend(Imlib_Image src, Imlib_Image dst, struct rect *cliprc, int mode)
 		    dstrc.w, dstrc.h);
 		break;
 	case MODE_SCALE:
-	case MODE_ZOOM:
+	case MODE_FILL:
 		wratio = (double) cliprc->w / (double) srcrc.w;
 		hratio = (double) cliprc->h / (double) srcrc.h;
-		if (mode == MODE_ZOOM)
+		if (mode == MODE_FILL)
 			ratio = wratio > hratio ? wratio : hratio;
 		else
 			ratio = wratio < hratio ? wratio : hratio;
