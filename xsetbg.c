@@ -73,11 +73,20 @@ static void		 blend(Imlib_Image, Imlib_Image, struct rect *, int);
 static void		 set_bg(Display *, Imlib_Image);
 
 int		 dflag;
-enum modes {
+const char *modes[] = {
+	"-copy",
+	"-center",
+	"-stretch",
+	"-fit",
+	"-fill",
+	"-tile",
+	NULL
+};
+enum {
 	MODE_COPY,
 	MODE_CENTER,
 	MODE_STRETCH,
-	MODE_SCALE,
+	MODE_FIT,
 	MODE_FILL,
 	MODE_TILE,
 	MODE_INVALID,
@@ -127,30 +136,23 @@ main(int argc, char **argv)
 		if (!strcmp(argv[i], "-d") ||
 		    !strcmp(argv[i], "-h") ||
 		    !strcmp(argv[i], "-help") ||
-		    !strcmp(argv[i], "--help"))
+		    !strcmp(argv[i], "--help")) {
 			/* ignore; processed these earlier */;
-		else if (!strcmp(argv[i], "-copy"))
-			mode = MODE_COPY;
-		else if (!strcmp(argv[i], "-center"))
-			mode = MODE_CENTER;
-		else if (!strcmp(argv[i], "-stretch"))
-			mode = MODE_STRETCH;
-		else if (!strcmp(argv[i], "-scale"))
-			mode = MODE_SCALE;
-		else if (!strcmp(argv[i], "-fill"))
-			mode = MODE_FILL;
-		else if (!strcmp(argv[i], "-tile"))
-			mode = MODE_TILE;
-		else if (!strcmp(argv[i], "-screen")) {
-			if (++i >= argc)
-				usage();
-			scr_list = argv[i];
-		} else { /* ah, this must be the image filename... */
-			if (scr_list == NULL)
-				scr_list = "all";
-			foreach_screen(dpy, canvas, scr_list,
-			    screens, n_screens, argv[i], mode);
 		}
+
+		for (mode = 0; mode < MODE_INVALID; ++mode)
+			if (!strcmp(argv[mode], modes[mode]))
+				break;
+		if (mode == MODE_INVALID)
+			mode = MODE_DEFAULT;
+		else
+			continue;
+		
+		/* ah, this must be the image filename */
+		if (scr_list == NULL)
+			scr_list = "all";
+		foreach_screen(dpy, canvas, scr_list,
+		    screens, n_screens, argv[i], mode);
 	}
 
 	set_bg(dpy, canvas);
@@ -238,9 +240,7 @@ get_screens(Display *dpy, int *n_screens)
 	scr->rc.w = WidthOfScreen(xscreen);
 	scr->rc.h = HeightOfScreen(xscreen);
 
-	/* fill out info about the Xinerama screens, if
-	 * there are any...
-	 */
+	/* fill out info about the Xinerama screens, if there are any */
 	for (++scr; xin < xineinfo + n_xineinfo; ++scr, ++xin) {
 		scr->no   = xin->screen_number;
 		scr->rc.x = xin->x_org;
