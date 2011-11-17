@@ -24,6 +24,10 @@
  * xsetbg can set the background for the whole virtual screen or for
  * individual Xinerama screens.
  *
+ * It doesn't clear the background before applying the image. Use 
+ * xsetroot -solid <color> to reset the background to a certain color
+ * before running xsetbg.
+ *
  *
  * Requires the Imlib2 library.
  *
@@ -105,7 +109,7 @@ main(int argc, char **argv)
 	int		 mode = DEFAULT_MODE;
 	int		 scr_no;
 	Imlib_Image	 image;
-	int		 i;
+	int		 i, j;
 	char		*scr_list = DEFAULT_SCREEN_LIST;
 	char		*tok;
 
@@ -126,27 +130,34 @@ main(int argc, char **argv)
 			usage();
 		else if (!strcmp(argv[i], "--help"))
 			usage();
+		else
+			break;
 	}
 
 	init_imlib(dpy);
 	screens = get_screens(dpy, &n_screens);
 	canvas = get_bg(dpy);
 
-	for (i = 1; i < argc; ++i) {
-		if (!strcmp(argv[i], "-d") ||
-		    !strcmp(argv[i], "-h") ||
-		    !strcmp(argv[i], "-help") ||
-		    !strcmp(argv[i], "--help")) {
-			/* ignore; processed these earlier */;
-		}
+	for (/* empty */; i < argc; ++i) {
 
-		for (mode = 0; mode < MODE_INVALID; ++mode)
-			if (!strcmp(argv[mode], modes[mode]))
-				break;
-		if (mode == MODE_INVALID)
-			mode = MODE_DEFAULT;
-		else
-			continue;
+	next_arg:
+
+		for (j = 0; j < MODE_INVALID; ++j) {
+			if (!strcmp(argv[i], modes[j])) {
+				mode = j;
+				if (++i >= argc)
+					usage();
+				goto next_arg;
+			}
+		}
+		if (!strcmp(argv[i], "-screen")) {
+			if (++i >= argc)
+				usage();
+			scr_list = argv[i];
+			if (++i >= argc)
+				usage();
+			goto next_arg;
+		}
 		
 		/* ah, this must be the image filename */
 		if (scr_list == NULL)
@@ -194,7 +205,7 @@ xcalloc(size_t nmemb, size_t size)
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: xsetbg ([-screen <int|all|whole>] \\\n"
+	fprintf(stderr, "usage: xsetbg ([-screen <int,int,...|all|whole>] \\\n"
 			"              [-copy|-center|-stretch|-scale|-fill|-tile] \\\n"
 			"              <image>)*\n");
 	exit(1);
@@ -305,7 +316,7 @@ foreach_screen(Display *dpy, Imlib_Image canvas, const char *scr_list,
 	strncpy(buf, scr_list, sizeof(buf));
 	buf[sizeof(buf)-1] = '\0';
 
-	for (tok = strtok(buf, " \t"); tok != NULL; tok = strtok(NULL, " \t")) {
+	for (tok = strtok(buf, ","); tok != NULL; tok = strtok(NULL, ",")) {
 		if (!strcmp(tok, "all")) {
 			for (scr = screens + 1; scr < screens + n_screens; ++scr)
 				blend(img, canvas, &scr->rc, mode);
@@ -376,7 +387,7 @@ blend(Imlib_Image src, Imlib_Image dst, struct rect *cliprc, int mode)
 		dbgprintf(1, " dstrc={%d, %d, %d, %d}\n", dstrc.x, dstrc.y,
 		    dstrc.w, dstrc.h);
 		break;
-	case MODE_SCALE:
+	case MODE_FIT:
 	case MODE_FILL:
 		wratio = (double) cliprc->w / (double) srcrc.w;
 		hratio = (double) cliprc->h / (double) srcrc.h;
@@ -399,15 +410,19 @@ blend(Imlib_Image src, Imlib_Image dst, struct rect *cliprc, int mode)
 		imlib_context_set_image(dst);
 		imlib_context_set_cliprect(
 		    cliprc->x, cliprc->y, cliprc->w, cliprc->h);
-		nrows = cliprc->h / srcrc.h + 1;
-		ncols = cliprc->w / srcrc.w + 1;
+		nrows = cliprc->h / srcrc.h + (cliprc->h % srcrc.h != 0 ? 1 : 0);
+		ncols = cliprc->w / srcrc.w + (cliprc->w % srcrc.w != 0 ? 1 : 0);
 		dbgprintf(1, " nrows=%d; ncols=%d;\n", nrows, ncols);
 		dstrc.w = srcrc.w;
 		dstrc.h = srcrc.h;
 		for (i = 0; i < nrows; ++i) {
+			dbgprintf(1, " row %i\n", i);
 			for (j = 0; j < ncols; ++j) {
-				dstrc.x = j * srcrc.w;
-				dstrc.y = i * srcrc.h;
+				dbgprintf(1, "  column %i\n", j);
+				dstrc.x = cliprc->x + j * srcrc.w;
+				dstrc.y = cliprc->y + i * srcrc.h;
+				dbgprintf(1, "   dst={%i, %i}\n", dstrc.x,
+				    dstrc.y);
 				imlib_blend_image_onto_image(src, 1,
 				    srcrc.x, srcrc.y, srcrc.w, srcrc.h,
 				    dstrc.x, dstrc.y, dstrc.w, dstrc.h);
