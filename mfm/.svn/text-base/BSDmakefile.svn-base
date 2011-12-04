@@ -1,6 +1,0 @@
-CFLAGS!=pkg-config --cflags gtk+-2.0
-LDFLAGS!=pkg-config --libs gtk+-2.0
-CC=pcc
-
-mfm: main.o mfm.o conf.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $>
