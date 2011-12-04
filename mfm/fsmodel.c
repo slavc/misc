@@ -1,0 +1,1 @@
+G_DEFINE_TYPE(FsModel, fs_model, G_TYPE_OBJECT

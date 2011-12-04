@@ -1,0 +1,14 @@
+CFLAGS += -g
+CC = cc
+
+all: lisp
+
+lisp: lisp.o parse.o eval.o mem.o util.o
+	$(CC) -o $@ lisp.o parse.o eval.o mem.o util.o
+
+beauty:
+	for f in *.c *.h; do indent $$f; done
+	rm *.BAK
+
+clean:
+	rm -rf lisp *.o

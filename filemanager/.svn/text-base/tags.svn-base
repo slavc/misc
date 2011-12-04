@@ -1,0 +1,34 @@
+Mfm	fm.c	/^main(int argc, char **argv) {$/
+Mmain	main.c	/^main(int argc, char **argv) {$/
+NELEMS	util.h	/^#define NELEMS(array) (sizeof(array)\/sizeof(array/
+add_child	fm.c	/^add_child(fsnode_t *node) {$/
+ascend	util.c	/^ascend(const char *path_str) {$/
+bzero_fsnode	fm.c	/^bzero_fsnode(fsnode_t *p) {$/
+change_dir	main.c	/^change_dir(const char *path) {$/
+clear_fsnode	fm.c	/^clear_fsnode(fsnode_t *node) {$/
+compare_fsnodes_by_name	fm.c	/^compare_fsnodes_by_name(const void *ptr1, const vo/
+compare_fsnodes_by_type	fm.c	/^compare_fsnodes_by_type(const void *ptr1, const vo/
+create_icon_view	main.c	/^create_icon_view(void) {$/
+create_main_view	main.c	/^create_main_view(void) {$/
+create_scrolled_window	main.c	/^create_scrolled_window(GtkWidget *child) {$/
+get_home_dir	util.c	/^get_home_dir(void) {$/
+get_icon	main.c	/^get_icon(fsnode_t *node) {$/
+handle_back_clicked	main.c	/^handle_back_clicked(GtkWidget *widget, gpointer un/
+handle_forward_clicked	main.c	/^handle_forward_clicked(GtkWidget *widget, gpointer/
+handle_home_clicked	main.c	/^handle_home_clicked(GtkWidget *widget, gpointer un/
+handle_icon_view_item_activated	main.c	/^handle_icon_view_item_activated(GtkWidget *widget,/
+handle_main_window_destroy	main.c	/^handle_main_window_destroy(GtkWidget *widget, gpoi/
+handle_up_clicked	main.c	/^handle_up_clicked(GtkWidget *widget, gpointer unus/
+list_dir	fm.c	/^list_dir(const char *path, fsnode_t *node) {$/
+load_default_icons	main.c	/^load_default_icons(void) {$/
+normalize_path	main.c	/^normalize_path(const char *path) {$/
+populate_icon_view	main.c	/^populate_icon_view(GtkWidget *widget, fsnode_t *no/
+print_fsnode	fm.c	/^print_fsnode(fsnode_t *node) {$/
+rstrchr	main.c	/^rstrchr(const char *str_start, const char *search_/
+slash	util.c	/^slash(const char *path_so_far) {$/
+sort_fsnodes_children	fm.c	/^sort_fsnodes_children(fsnode_t *node) {$/
+str_glue	util.c	/^str_glue(const char *s, ...) {$/
+strip_space	main.c	/^strip_space(const char *s) {$/
+xcalloc	util.c	/^xcalloc(size_t nmemb, size_t size) {$/
+xmalloc	util.c	/^xmalloc(size_t size) {$/
+xrealloc	util.c	/^xrealloc(void *ptr, size_t size) {$/

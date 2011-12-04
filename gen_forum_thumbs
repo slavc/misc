@@ -1,0 +1,15 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+	filename = "";
+}
+
+/^#/ {
+	filename = $2;
+	next;
+}
+
+{
+	printf("[url=%s][img]%s[/img][/url]\n", $2, $1);
+}
+

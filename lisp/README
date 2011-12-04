@@ -1,0 +1,42 @@
+A minimal LISP interpreter written in C.
+Currently it's intended more as an educational tool (to explore both 
+LISP and interpreter design) rather than a practial one.
+It was written in large part in accordance to 'The Roots of Lisp' paper
+by Paul Graham: http://www.paulgraham.com/rootsoflisp.html
+
+Comments begin with either ';', either '#' and span to the end of the
+line.
+
+Supported operators are:
+
+* quote (or an apostroph before the expression) -- returns it's
+argument.
+* atom -- returns atom 't' if argument is an atom or '()' list if it's
+not.
+* eq -- returns atom 't' if both it's arguments are the same atom or
+both are empty list or an empty list otherwise.
+* car -- returns the first element of it's list argument.
+* cdr -- returns a list made of all but the first element of it's list
+argument.
+* cons -- returns a list made of the value of it's first argument
+followed by the elements of it's second list argument.
+* cond -- conditional, it walks through it's arguments, each of which is 
+a list of two elements, if the value of first element is atom 't',
+then the value of the second element is returned.
+* defun -- define a function, first argument is the name of the
+function, second is the list of parameters it takes and third is
+function's expression.
+* list -- returns a list made of all of it's arguments.
+* null -- returns atom 't' if it's argument is an empty list,
+and an empty list if otherwise.
+* and -- returns atom 't' if both of it's arguments do or if both are
+empty list, or empty list otherwise.
+* not -- returns atom 't' if it's aregument is an empty list or an empty
+list if otherwise.
+* exec -- builds a string vector from all of it's arguemnts, the first
+element of the vector is the name of the program to execute, the rest
+are arguments to it. Returns atom 't' if the program returns 0 or empty
+list otherwise.
+
+There is a 'test.lisp' file included which demonstrates the usage of the
+operators and serves as a regression test.
