@@ -1,0 +1,6 @@
+binding "Submit" {
+  bind "Return" {
+    "insert-at-cursor" ("")
+  }
+}
+class "GtkEntry" binding "Submit"

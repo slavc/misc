@@ -1,0 +1,16 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+	filename = "";
+}
+
+/^#/ {
+	filename = $2;
+	next;
+}
+
+{
+	printf("<img src=\"%s\">\n", $2);
+	printf("<!-- %s -->\n", filename);
+}
+
