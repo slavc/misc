@@ -1,0 +1,7 @@
+XTerm*foreground: PaleGreen2
+XTerm*background: black
+XTerm*scrollBar: false
+XTerm*saveLines: 512
+XTerm*fastScroll: true
+XTerm*font: -xos4-terminus-medium-r-normal--16-160-72-72-c-80-iso10646-1
+XTerm*boldFont: -xos4-terminus-bold-r-normal--16-160-72-72-c-80-iso10646-1

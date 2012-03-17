@@ -1,0 +1,14 @@
+color activeborder PaleGreen2
+color inactiveborder PaleGreen4
+color font PaleGreen2
+color menufg PaleGreen2
+color menubg black
+snapdist 5
+moveamount 5
+
+bind M-period unmap
+bind M-comma ssh
+
+bind M-Prior "amixer sset Master 1%+"
+bind M-Next "amixer sset Master 1%-"
+bind M-End "amixer sset Master toggle"
