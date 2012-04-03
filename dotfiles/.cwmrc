@@ -13,3 +13,6 @@ bind M-comma ssh
 bind M-Prior "amixer sset Master 1%+"
 bind M-Next "amixer sset Master 1%-"
 bind M-End "amixer sset Master toggle"
+bind XF86AudioRaiseVolume "amixer sset Master 1%+"
+bind XF86AudioLowerVolume "amixer sset Master 1%-"
+bind XF86AudioMute "amixer sset Master toggle"
