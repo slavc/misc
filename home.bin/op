@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Open file(s) in the appropriate program.
+
+op_file() {
+    type="$1"
+    path="$2"
+
+    case "$type" in
+    pdf)
+        mupdf "$path" > /dev/null 2>&1 &
+        disown
+        ;;
+    *)
+        echo "$path: don't know how to open a $type file" 1>&2
+        return 1
+        ;;
+    esac
+}
+
+while [ $# -gt 0 ]; do
+    path="$1"
+    type="${1##*.}"
+    op_file "$type" "$path"
+    shift
+done
+
