@@ -10,7 +10,7 @@ error() {
 }
 
 usage() {
-    echo "$progname [-f]"
+    echo "usage: $progname [-f]"
     echo "Take a screenshot and put it into $screenshotdir."
     echo " -f -- take a fullscreen screenshot"
 }
@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
     -f)
         fullscreen=1
         ;;
-    -h)
+    -h|--help)
         usage
         exit 0
         ;;
