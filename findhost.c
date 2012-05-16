@@ -3,7 +3,7 @@
  *
  * The "client" counterpart to echohostnamed.c.
  *
- * If hostname is give -- scans the given IP range to find that
+ * If hostname is given -- scans the given IP range to find that
  * host. Otherwise prints out all hosts found in that range.
  */
 
@@ -13,13 +13,17 @@
 #include <stdarg.h>
 
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/time.h>
 #include <sys/types.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <err.h>
 
 #define DEFAULT_PORT	1234
+#define DEFAULT_TIMEOUT	100	/* in milliseconds */
 #define MAKE_IP(a, b, c, d)	(((((((a & 0xff) << 8) | b & 0xff) << 8) | c & 0xff) << 8) | d & 0xff)
 
 struct range {
@@ -31,8 +35,9 @@ void	 usage(const char *);
 int	 dbgprintf(const char *, ...);
 int	 read_ip(char *, struct range *);
 int	 read_range(const char *, struct range *);
-void	 find_host(struct range *, const char *, int);
-char	*get_remote_hostname(int, int, char *, const size_t);
+void	 find_host(struct range *, const char *, int, int);
+char	*get_remote_hostname(int, int, int, char *, const size_t);
+void	 set_nonblock_mode(int, int);
 
 int	 dflag;
 
@@ -43,6 +48,7 @@ main(int argc, char **argv)
 	struct range	 ip[4];
 	const char	*hostname = NULL;
 	int		 port = DEFAULT_PORT;
+	int		 timeout = DEFAULT_TIMEOUT;
 	const char	*progname;
 	extern char	*optarg;
 	extern int	 optind;
@@ -53,7 +59,7 @@ main(int argc, char **argv)
 	else
 		progname = argv[0];
 
-	while ((c = getopt(argc, argv, "hdp:")) != -1) {
+	while ((c = getopt(argc, argv, "hdp:t:")) != -1) {
 		switch (c) {
 		case 'h':
 			usage(progname);
@@ -64,6 +70,9 @@ main(int argc, char **argv)
 			break;
 		case 'p':
 			port = atoi(optarg);
+			break;
+		case 't':
+			timeout = atoi(optarg);
 			break;
 		default:
 			usage(progname);
@@ -88,7 +97,7 @@ main(int argc, char **argv)
 	if (argc > 1)
 		hostname = argv[1];
 
-	find_host(ip, hostname, port);
+	find_host(ip, hostname, port, timeout);
 
 	return 0;
 }
@@ -96,7 +105,7 @@ main(int argc, char **argv)
 void
 usage(const char *progname)
 {
-	printf("usage: %s [-d] <ip_range> [hostname]\n", progname);
+	printf("usage: %s [-d] [-p <port>] [-t <timeout>] <ip_range> [hostname]\n", progname);
 	printf("  If hostname is supplied, print on which IP it resides.\n");
 	printf("  Otherwise print all hosts found in the range.\n");
 }
@@ -153,7 +162,7 @@ read_range(const char *s, struct range *rp)
 }
 
 void
-find_host(struct range ip[4], const char *hostname, int port)
+find_host(struct range ip[4], const char *hostname, int port, int timeout)
 {
 	int	 a, b, c, d;
 	char	 buf[256];
@@ -173,11 +182,10 @@ find_host(struct range ip[4], const char *hostname, int port)
 			for (c = ip[2].start; c <= ip[2].end; ++c) {
 				for (d = ip[3].start; d <= ip[3].end; ++d) {
 					dbgprintf("scanning %d.%d.%d.%d\n", a, b, c, d);
-					if (get_remote_hostname(MAKE_IP(a, b, c, d), port, buf, sizeof(buf)) == NULL) {
+					if (get_remote_hostname(MAKE_IP(a, b, c, d), port, timeout, buf, sizeof(buf)) == NULL) {
 						dbgprintf("failed to get hostname\n");
 						continue;
 					}
-					dbgprintf("got hostname \"%s\"\n", buf);
 
 					if (hostname == NULL)
 						printf("%d.%d.%d.%d %s\n", a, b, c, d, buf);
@@ -192,42 +200,66 @@ find_host(struct range ip[4], const char *hostname, int port)
 }
 
 char *
-get_remote_hostname(int ip, int port, char *hostname, const size_t hostnamesize)
+get_remote_hostname(int ip, int port, int timeout, char *hostname, const size_t hostnamesize)
 {
-	char			 buf[256];
-	const size_t		 bufsize = sizeof(buf);
-	char			*hostnamep = hostname;
-
 	int			 s;
 	struct sockaddr_in	 sa;
+        long                     flags;
 	ssize_t			 nbytes;
+	fd_set			 fds[1];
+	struct timeval		 tv;
 
 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if (s == -1)
 		err(1, "socket");
-
-	/* set non-blocking mode with fcntl, O_NONBLOCK and the select() on socket */
 
 	bzero(&sa, sizeof(sa));
 	sa.sin_family = AF_INET;
 	sa.sin_port = htons((short) port);
 	sa.sin_addr.s_addr = htonl(ip);
 
-	dbgprintf("attempting to connect... ");
-	if (connect(s, (struct sockaddr *) &sa, sizeof(sa)) != 0) {
-		dbgprintf("failure\n");
-		return NULL;
-	}
-	dbgprintf("success\n");
+	dbgprintf("setting non-blocking mode on socket\n");
+	set_nonblock_mode(s, 1);
+
+	dbgprintf("calling connect...\n");
+	connect(s, (struct sockaddr *) &sa, sizeof(sa));
+
+	dbgprintf("select(2)...\n");
+	FD_ZERO(fds);
+	FD_SET(s, fds);
+	tv.tv_sec = timeout / 1000;
+	tv.tv_usec = (timeout % 1000) * 1000;
+	if (select(sizeof(fds)/sizeof(*fds), fds, fds, fds, &tv) != 0)
+		err(1, "select");
+	dbgprintf("select(2) returned\n");
 
 	dbgprintf("reading the hostname... ");
-
 	nbytes = read(s, hostname, hostnamesize - 1);
-	hostname[nbytes] = '\0';
-
-	dbgprintf("%d bytes read\n", nbytes);
-
 	close(s);
+	if (nbytes == -1) {
+		dbgprintf("read(2) failed, the socket wasn't successfully connected\n");
+		return NULL;
+	} else {
+		hostname[nbytes] = '\0';
+		return hostname;
+	}
+}
 
-	return hostname;
+void
+set_nonblock_mode(int fd, int value)
+{
+	long	 flags;
+
+	flags = fcntl(fd, F_GETFL);
+	if (flags == -1)
+		err(1, "fcntl");
+
+	if (value) {
+		flags |= O_NONBLOCK;
+	} else {
+		flags &= ~O_NONBLOCK;
+	}
+
+	if (fcntl(fd, F_SETFL, flags) != 0)
+		err(1, "fcntl");
 }
