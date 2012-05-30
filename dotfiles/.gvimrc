@@ -1,3 +1,5 @@
+source /etc/vimrc
+
 colorscheme murphy
 set gfn=Terminus\ 12
 "set guioptions+=c " console dialogs for simple choices

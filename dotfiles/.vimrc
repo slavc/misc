@@ -15,6 +15,10 @@ set cindent
 set cinoptions=:0
 "set hidden " no annoying "no write since last change" message
 
+" turn off any kind of bell
+set vb
+set vb t_vb=
+
 set wildchar=<Tab> wildmenu wildmode=full
 set wildcharm=<C-Z>
 nnoremap <Tab> :b <C-Z>
