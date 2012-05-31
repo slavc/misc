@@ -35,8 +35,8 @@ if [ `id -u` -ne 0 ]; then
 
     find ~/src/misc/dotfiles -name '.*' -type f -exec cp \{\} ~ \;
 
-    curl -s -o ~/tmp/darklime.tgz http://art.gnome.org/download/themes/gtk2/1364/GTK2-ClearlooksDarkLime.tar.gz && mkdir -p ~/.themes && tar -C ~/.themes -zxf ~/tmp/darklime.tgz
-    curl -s -o ~/tmp/darkilouche.tbz2 http://art.gnome.org/download/themes/gtk2/1285/GTK2-Darkilouche.tar.bz2 && mkdir -p ~/.themes && tar -C ~/.themes -jxf ~/tmp/darkilouche.tbz2
+    curl -s -o ~/tmp/darklime.tgz http://art.gnome.org/download/themes/gtk2/1364/GTK2-ClearlooksDarkLime.tar.gz && mkdir -p ~/.themes && tar -C ~/.themes -zxf ~/tmp/darklime.tgz && rm ~/tmp/darklime.tgz
+    curl -s -o ~/tmp/darkilouche.tbz2 http://art.gnome.org/download/themes/gtk2/1285/GTK2-Darkilouche.tar.bz2 && mkdir -p ~/.themes && tar -C ~/.themes -jxf ~/tmp/darkilouche.tbz2 && rm ~/tmp/darkilouche.tbz2
 
 
     svn co https://core.fluendo.com/gstreamer/svn/trunk/ ~/src/fluendo
