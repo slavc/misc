@@ -9,14 +9,15 @@ function error()
     exit 1
 }
 
+MY_LOCATION=`pwd`
+
 if [ `id -u` -ne 0 ]; then
-    echo 'Please enter the root password in the following prompt.'
-    su root "$0" # perform actions which require root privileges
+    read -s -p 'Please enter the root password (will not echo): ' root_password
 
     cd
     mkdir -p src tmp .ssh || error 'failed to create the required directories'
 
-    if ! fgrep 'Host github.com' ~/.ssh/config > /dev/null; then
+    if ! fgrep 'Host github.com' ~/.ssh/config > /dev/null 2>&1; then
         echo 'Host github.com' >> ~/.ssh/config
         echo "IdentityFile $HOME/.ssh/github_rsa" >> ~/.ssh/config
     fi
@@ -29,6 +30,12 @@ if [ `id -u` -ne 0 ]; then
         git clone git@github.com:S010/cwm.git
         git clone git@github.com:S010/misc.git
     fi
+
+
+    cd "$MY_LOCATION"
+    env ORIG_USERNAME=$USER su root "$0" <<EOF
+$root_password
+EOF
 
     cd ~/src/cwm
     make
@@ -114,6 +121,26 @@ else # perform actions which require root privileges
         liboil-devel \
         libtool \
     || error 'failed to install useful packages'
+
+    cp "$ORIG_USERNAME"/src/misc/dotfiles/{vimrc.local,gvimrc} /etc/
+    chown root:root /etc/{vimrc.local,gvimrc}
+    echo -e '\n\n\n\nsource /etc/vimrc.local' >> /etc/vimrc
+
+    cat > /etc/profile.d/local.sh <<"EOF"
+#!/bin/sh
+
+alias vcl='gvim --servername ${GVIM_SERVER:=GVIM_$$} --remote-silent'
+alias vcmd='gvim --servername ${GVIM_SERvER:=GVIM_$$} --remote-silent -c'
+
+PATH=$HOME/opt/bin:$HOME/bin:$HOME/jdk/bin:$PATH
+PS1='\u@\h:\j:\W\$ '
+PAGER=/usr/bin/less
+VISUAL=/usr/bin/vim
+LESS=iS
+
+export PATH PS1 PAGER VISUAL LESS
+EOF
+
 fi
 
 exit 0
