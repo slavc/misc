@@ -2,6 +2,7 @@ syntax on
 filetype on
 au BufNewFile,BufRead *.ecpp setlocal filetype=cpp
 au BufNewFile,BufRead *.jsp setlocal filetype=xml
+au BufNewFile,BufRead *.zcpp set filetype=cpp
 colorscheme default
 set background=dark
 set ic
