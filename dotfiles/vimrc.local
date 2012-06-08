@@ -1,25 +1,85 @@
-syntax on
-filetype on
-au BufNewFile,BufRead *.ecpp setlocal filetype=cpp
-au BufNewFile,BufRead *.jsp setlocal filetype=xml
-au BufNewFile,BufRead *.zcpp set filetype=cpp
-colorscheme default
-set background=dark
-set ic
-set incsearch
-set nowrap
-set expandtab
-set softtabstop=4
-set shiftwidth=4
-set ai
-set cindent
-set cinoptions=:0
-"set hidden " no annoying "no write since last change" message
+function! CloseCurrentBuf()
+    let s:bnam = bufname("%")
+    let s:bnr = bufnr(s:bnam)
+    execute ":bn!"
+    execute ":bd! " . s:bnr
+endfunction
+
+function! ToggleKNRMode()
+    if &expandtab == 1
+        set noexpandtab
+        set sts=8
+        set sw=8
+        "set textwidth=80
+        "set colorcolumn=81
+        echo "KNF mode on"
+    else
+        set expandtab
+        set sts=4
+        set sw=4
+        "set textwidth=0
+        "set colorcolumn=0
+        echo "KNF mode off"
+    endif
+endfunction
+
+function! CloseOtherBufs()
+    let s:bnam = bufname("%")
+    exec ":bn!"
+    while bufname("%") != s:bnam
+        execute ":bd!"
+        execute ":bn!"
+    endwhile
+endfunction
 
 " turn off any kind of bell
+"set hidden " no annoying "no write since last change" message
+au BufNewFile,BufRead *.ecpp setlocal filetype=cpp
+au BufNewFile,BufRead *.jsp setlocal filetype=xml
+au BufNewFile,BufRead *.rdf set filetype=xml
+au BufNewFile,BufRead *.xbl set filetype=xml
+au BufNewFile,BufRead *.xul set filetype=xml
+au BufNewFile,BufRead *.zcpp set filetype=cpp
+colorscheme default
+filetype on
+map <C-S-h> zh
+map <C-S-l> zl
+map <C-c> "*y<CR>
+map <C-h> zH
+map <C-l> zL
+map <C-s> :w<CR>
+map <F5> :e<CR>:$<CR>2<C-e>
+map <F6> :split<CR>
+map <F7> :vsplit<CR>
+nnoremap <F10> :b! <C-Z>
+nnoremap <F11> :nohl<CR>
+nnoremap <F12> :call CloseCurrentBuf()<CR>
+nnoremap <F2> :call ToggleKNRMode()<CR>
+nnoremap <F9> :call ToggleSmallFont()<CR>
+nnoremap <S-F12> :call CloseOtherBufs()<CR>
+nnoremap <S-Tab> :bp!<CR>
+nnoremap <Tab> :bn!<CR>
+set ai
+set background=dark
+set cindent
+set cinoptions=:0
+set expandtab
+set formatoptions+=b " wrapping at first blank before textwidth
+set formatoptions+=c " ----- '' -----
+set formatoptions+=n " recognize numbered lists
+set formatoptions+=r " insert comment leader when Enter pressed
+set formatoptions+=t " auto format of both text and comments
+set ic
+set incsearch
+set nocompatible
+set nowrap
+set shiftwidth=4
+set showbreak=--
+set smartcase
+set smarttab
+set softtabstop=4
 set vb
 set vb t_vb=
-
 set wildchar=<Tab> wildmenu wildmode=full
 set wildcharm=<C-Z>
-nnoremap <Tab> :b <C-Z>
+syntax on
