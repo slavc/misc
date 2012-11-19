@@ -122,7 +122,7 @@ else # perform actions which require root privileges
         libtool \
     || error 'failed to install useful packages'
 
-    cp "$ORIG_USERNAME"/src/misc/dotfiles/{vimrc.local,gvimrc} /etc/
+    cp /home/"$ORIG_USERNAME"/src/misc/dotfiles/{vimrc.local,gvimrc} /etc/
     chown root:root /etc/{vimrc.local,gvimrc}
     echo -e '\n\n\n\nsource /etc/vimrc.local' >> /etc/vimrc
 

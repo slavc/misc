@@ -5,8 +5,6 @@
 // @include        http://*.livejournal.com/*
 // ==/UserScript==
 
-/* 0x1392.livejournal.com */
-
 // Possible values are:
 //  - phpbb
 //  - skype
