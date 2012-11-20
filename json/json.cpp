@@ -36,36 +36,42 @@ namespace json {
             value() :
                 m_type(NIL)
             {
+                std::clog << "value()" << std::endl;
             }
 
             value(int i) :
                 m_type(INTEGER),
                 m_u(i)
             {
+                std::clog << "value(int i)" << std::endl;
             }
 
             value(double d) :
                 m_type(DOUBLE),
                 m_u(d)
             {
+                std::clog << "value(double d)" << std::endl;
             }
 
             value(const char *s) :
                 m_type(STRING),
                 m_u(new std::string(s))
             {
+                std::clog << "value(const char *s)" << std::endl;
             }
 
             value(const std::string &s) :
                 m_type(STRING),
                 m_u(new std::string(s))
             {
+                std::clog << "value(const std::string &s)" << std::endl;
             }
 
             value(bool b) :
                 m_type(BOOLEAN),
                 m_u(b)
             {
+                std::clog << "value(bool b)" << std::endl;
             }
 
             std::string str() const {
@@ -187,11 +193,63 @@ namespace json {
                     throw illegal_op();
             }
 
+            value(const value &rhs) {
+                std::clog << "value(const value &rhs)" << std::endl;
+                *this = rhs;
+            }
+
+            value &operator= (const value &rhs) {
+                std::clog << "value &operator= (const value &rhs)" << std::endl;
+                if (&rhs == this)
+                    return *this;
+
+                m_type = rhs.m_type;
+                switch (m_type) {
+                case ARRAY:
+                    m_u.ptr.a = new array_container(*rhs.m_u.ptr.a);
+                    break;
+                case OBJECT:
+                    m_u.ptr.o = new object_container(*rhs.m_u.ptr.o);
+                    break;
+                case STRING:
+                    m_u.ptr.s = new std::string(*rhs.m_u.ptr.s);
+                    break;
+                case NIL:
+                case INTEGER:
+                case DOUBLE:
+                case BOOLEAN:
+                    m_u = rhs.m_u;
+                    break;
+                }
+
+                return *this;
+            }
+
+            virtual ~value() {
+                std::clog << "virtual ~value()" << std::endl;
+                switch (m_type) {
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case STRING:
+                    delete m_u.ptr.s;
+                    break;
+                case NIL:
+                case INTEGER:
+                case DOUBLE:
+                case BOOLEAN:
+                    break;
+                }
+            }
+
         protected:
             enum types m_type;
             union val {
                 union ptr {
-                    ptr() { }
+                    ptr() : s(nullptr) { }
                     ptr(std::string *s) : s(s) { }
                     ptr(std::vector<value> *a) : a(a) { }
                     ptr(std::vector<std::pair<std::string, value>> *o) : o(o) { }
@@ -201,7 +259,7 @@ namespace json {
                     std::vector<std::pair<std::string, value>> *o; // object
                 } ptr;
 
-                val() { }
+                val() : ptr() { }
                 val(int i) : i(i) { }
                 val(double d) : d(d) { }
                 val(bool b) : b(b) { }
@@ -213,6 +271,9 @@ namespace json {
                 double d;
                 bool   b;
             } m_u;
+
+            typedef std::vector<value> array_container;
+            typedef std::vector<std::pair<std::string, value>> object_container;
     };
 
     class array : public value {
@@ -265,9 +326,9 @@ void test() {
         "seq",      1234,
         "data",     json::array {
             json::object {
-                "name", "ATM0001",
+                "name",      "ATM0001",
                 "op_status", "INS",
-                "devices", json::array {
+                "devices",   json::array {
                     json::object {
                         "name",   "CASH_DISPENSER",
                         "status", "OKI",
@@ -279,12 +340,32 @@ void test() {
                 },
             },
             json::object {
-                "name", "ATM0002",
+                "name",      "ATM0002",
                 "op_status", "INS",
+                "devices",   json::array {
+                    json::object {
+                        "name",   "CASH_DISPENSER",
+                        "status", "OKI",
+                    },
+                    json::object {
+                        "name",   "CARD_READER",
+                        "status", "OKI",
+                    },
+                },
             },
             json::object {
-                "name", "ATM0003",
+                "name",      "ATM0003",
                 "op_status", "INS",
+                "devices",   json::array {
+                    json::object {
+                        "name",   "CASH_DISPENSER",
+                        "status", "OKI",
+                    },
+                    json::object {
+                        "name",   "CARD_READER",
+                        "status", "OKI",
+                    },
+                },
             },
         },
     };
