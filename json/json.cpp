@@ -2,7 +2,7 @@
 
 #include "json.hpp"
 
-void test() {
+void test_vctor() {
     json::object request {
         "request", "get_terminal_info",
         "seq",     1234,
@@ -58,6 +58,7 @@ void test() {
         },
     };
 
+    std::cout << "--- " << __func__ << " ---" << std::endl;
     std::cout << request.str() << std::endl;
     std::cout << response.str() << std::endl;
 
@@ -71,8 +72,18 @@ void test() {
     */
 }
 
+void test_subscript() {
+    json::object object;
+
+    object["key1"] = json::value(true);
+
+    std::cout << "--- " << __func__ << " ---" << std::endl;
+    std::cout << object.str() << std::endl;
+}
+
 int main(int argc, char **argv) {
-    test();
+    test_vctor();
+    test_subscript();
 
     return 0;
 }

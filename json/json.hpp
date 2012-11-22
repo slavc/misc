@@ -34,6 +34,9 @@ namespace json {
     class illegal_op : public exception {
     };
 
+    class out_of_bounds : public exception {
+    };
+
     class value {
         public:
             value() :
@@ -77,6 +80,59 @@ namespace json {
                 std::clog << "value(bool b)" << std::endl;
             }
 
+            value(const value &rhs) {
+                std::clog << "value(const value &rhs)" << std::endl;
+                *this = rhs;
+            }
+
+            value &operator= (const value &rhs) {
+                std::clog << "value &operator= (const value &rhs)" << std::endl;
+                if (&rhs == this)
+                    return *this;
+
+                // FIXME how about freeing resources up before assignment?
+                m_type = rhs.m_type;
+                switch (m_type) {
+                case ARRAY:
+                    m_u.ptr.a = new array_container(*rhs.m_u.ptr.a);
+                    break;
+                case OBJECT:
+                    m_u.ptr.o = new object_container(*rhs.m_u.ptr.o);
+                    break;
+                case STRING:
+                    m_u.ptr.s = new std::string(*rhs.m_u.ptr.s);
+                    break;
+                case NIL:
+                case INTEGER:
+                case DOUBLE:
+                case BOOLEAN:
+                    m_u = rhs.m_u;
+                    break;
+                }
+
+                return *this;
+            }
+
+            virtual ~value() {
+                std::clog << "virtual ~value()" << std::endl;
+                switch (m_type) {
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case STRING:
+                    delete m_u.ptr.s;
+                    break;
+                case NIL:
+                case INTEGER:
+                case DOUBLE:
+                case BOOLEAN:
+                    break;
+                }
+            }
+
             std::string str() const {
                 std::ostringstream os;
                 switch (m_type) {
@@ -109,7 +165,7 @@ namespace json {
                     for (auto i = m_u.ptr.o->begin(); i != m_u.ptr.o->end(); ++i) {
                         if (i != m_u.ptr.o->begin())
                             os << ',';
-                        os << i->first << ':' << i->second.str();
+                        os << '"' << i->first << '"' << ':' << i->second.str();
                     }
                     os << '}';
                     break;
@@ -118,6 +174,13 @@ namespace json {
                 }
 
                 return os.str();
+            }
+
+            value &push_back(const value &val) {
+                if (m_type != ARRAY)
+                    throw illegal_op();
+                m_u.ptr.a->push_back(val);
+                return *this;
             }
 
             class iterator {
@@ -152,7 +215,7 @@ namespace json {
                         else if (m_val.m_type == OBJECT)
                             return (*m_val.m_u.ptr.o)[m_idx].second;
                         else
-                            throw illegal_op{};
+                            throw illegal_op { };
                     }
 
                     value *operator-> () {
@@ -196,56 +259,25 @@ namespace json {
                     throw illegal_op();
             }
 
-            value(const value &rhs) {
-                std::clog << "value(const value &rhs)" << std::endl;
-                *this = rhs;
-            }
-
-            value &operator= (const value &rhs) {
-                std::clog << "value &operator= (const value &rhs)" << std::endl;
-                if (&rhs == this)
-                    return *this;
-
-                m_type = rhs.m_type;
-                switch (m_type) {
-                case ARRAY:
-                    m_u.ptr.a = new array_container(*rhs.m_u.ptr.a);
-                    break;
-                case OBJECT:
-                    m_u.ptr.o = new object_container(*rhs.m_u.ptr.o);
-                    break;
-                case STRING:
-                    m_u.ptr.s = new std::string(*rhs.m_u.ptr.s);
-                    break;
-                case NIL:
-                case INTEGER:
-                case DOUBLE:
-                case BOOLEAN:
-                    m_u = rhs.m_u;
-                    break;
-                }
-
-                return *this;
-            }
-
-            virtual ~value() {
-                std::clog << "virtual ~value()" << std::endl;
-                switch (m_type) {
-                case ARRAY:
-                    delete m_u.ptr.a;
-                    break;
-                case OBJECT:
-                    delete m_u.ptr.o;
-                    break;
-                case STRING:
-                    delete m_u.ptr.s;
-                    break;
-                case NIL:
-                case INTEGER:
-                case DOUBLE:
-                case BOOLEAN:
-                    break;
-                }
+            value &operator[](const value &val) {
+                if (val.m_type == STRING && m_type == OBJECT) {
+                    const std::string key(*val.m_u.ptr.s);
+                    if (m_type != OBJECT)
+                        throw illegal_op();
+                    for (auto i = begin(); i != end(); ++i)
+                        if (i.key() == key)
+                            return *i;
+                    this->m_u.ptr.o->push_back(std::make_pair(key, value { }));
+                    return this->m_u.ptr.o->back().second;
+                } else if (val.m_type == INTEGER && m_type == ARRAY) {
+                    size_t idx(val.m_u.i);
+                    if (m_type != ARRAY)
+                        throw illegal_op();
+                    if (idx < 0 || idx >= m_u.ptr.a->size())
+                        throw out_of_bounds { };
+                    return (*m_u.ptr.a)[idx];
+                } else
+                    throw illegal_op { };
             }
 
         protected:
@@ -281,6 +313,11 @@ namespace json {
 
     class array : public value {
         public:
+            array() {
+                this->m_type = ARRAY;
+                this->m_u.ptr.a = new std::vector<value>();
+            }
+
             array(std::initializer_list<value> l) {
                 this->m_type = ARRAY;
                 this->m_u.ptr.a = new std::vector<value>();
@@ -291,6 +328,11 @@ namespace json {
 
     class object : public value {
         public:
+            object() {
+                this->m_type = OBJECT;
+                this->m_u.ptr.o = new std::vector<std::pair<std::string, value>>();
+            }
+
             template<typename ... Types> object(Types ... args) {
                 this->m_type = OBJECT;
                 this->m_u.ptr.o = new std::vector<std::pair<std::string, value>>();
