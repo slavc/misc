@@ -88,8 +88,8 @@ namespace json {
                 *this = rhs;
             }
 
-            value &operator= (const value &rhs) {
-                std::clog << "value &operator= (const value &rhs)" << std::endl;
+            value &operator=(const value &rhs) {
+                std::clog << "value &operator=(const value &rhs)" << std::endl;
                 if (&rhs == this)
                     return *this;
 
@@ -218,18 +218,18 @@ namespace json {
                         return m_idx;
                     }
 
-                    iterator &operator++ () {
+                    iterator &operator++() {
                         ++m_idx;
                         return *this;
                     }
 
-                    iterator operator++ (int) {
+                    iterator operator++(int) {
                         iterator prev { *this };
                         ++m_idx;
                         return prev;
                     }
 
-                    value &operator* () {
+                    value &operator*() {
                         if (m_val.m_type == ARRAY)
                             return (*m_val.m_u.ptr.a)[m_idx];
                         else if (m_val.m_type == OBJECT)
@@ -238,15 +238,15 @@ namespace json {
                             throw illegal_op { };
                     }
 
-                    value *operator-> () {
+                    value *operator->() {
                         return &operator*();
                     }
 
-                    bool operator== (const iterator &rhs) {
+                    bool operator==(const iterator &rhs) {
                         return &m_val == &rhs.m_val && m_idx == rhs.m_idx;
                     }
 
-                    bool operator!= (const iterator &rhs) {
+                    bool operator!=(const iterator &rhs) {
                         return !operator==(rhs);
                     }
 
