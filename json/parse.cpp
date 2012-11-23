@@ -166,11 +166,32 @@ match_result match_string(const std::string &s, std::string::size_type &pos) {
     if (!match_dquote(s, pos))
         return { false };
     std::ostringstream ostr;
-    char prev { 'X' };
-    while ((s[pos] != '"' && prev != '\\') && pos < s.size()) {
-        ostr << s[pos];
-        prev = s[pos];
-        ++pos;
+    for (/* empty */; s[pos] != '"' && pos < s.size(); ++pos) {
+        if (s[pos] == '\\' ) {
+            if (++pos >= s.size())
+                return { false };
+            switch (s[pos]) {
+            case 'r':
+                ostr << '\r';
+                break;
+            case 'n':
+                ostr << '\n';
+                break;
+            case 't':
+                ostr << '\t';
+                break;
+            case 'f':
+                ostr << '\f';
+                break;
+            case 'b':
+                // FIXME implement backspace
+                break;
+            default:
+                ostr << s[pos];
+                break;
+            }
+        } else
+            ostr << s[pos];
     }
     return { match_dquote(s, pos), { ostr.str() } };
 }
@@ -274,7 +295,7 @@ match_result match_false(const std::string &s, std::string::size_type &pos) {
 }
 
 match_result match_null(const std::string &s, std::string::size_type &pos) {
-    return { match_word(s, pos, "null"), {} };
+    return { match_word(s, pos, "null") };
 }
 
 int main(int argc, char **argv) {
