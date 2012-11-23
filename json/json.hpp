@@ -39,6 +39,9 @@ namespace json {
 
     class value {
         public:
+            typedef std::vector<value> array_container;
+            typedef std::vector<std::pair<std::string, value>> object_container;
+
             value() :
                 m_type(NIL)
             {
@@ -90,7 +93,24 @@ namespace json {
                 if (&rhs == this)
                     return *this;
 
-                // FIXME how about freeing resources up before assignment?
+                switch (m_type) {
+                case STRING:
+                    delete m_u.ptr.s;
+                    break;
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case NIL:
+                case DOUBLE:
+                case INTEGER:
+                case BOOLEAN:
+                default:
+                    break;
+                }
+
                 m_type = rhs.m_type;
                 switch (m_type) {
                 case ARRAY:
@@ -286,12 +306,12 @@ namespace json {
                 union ptr {
                     ptr() : s(nullptr) { }
                     ptr(std::string *s) : s(s) { }
-                    ptr(std::vector<value> *a) : a(a) { }
-                    ptr(std::vector<std::pair<std::string, value>> *o) : o(o) { }
+                    ptr(array_container *a) : a(a) { }
+                    ptr(object_container *o) : o(o) { }
 
-                    std::string                  *s;
-                    std::vector<value>           *a; // array
-                    std::vector<std::pair<std::string, value>> *o; // object
+                    std::string       *s;
+                    array_container   *a; // array
+                    object_container  *o; // object
                 } ptr;
 
                 val() : ptr() { }
@@ -299,28 +319,26 @@ namespace json {
                 val(double d) : d(d) { }
                 val(bool b) : b(b) { }
                 val(std::string *s) : ptr(s) { }
-                val(std::vector<value> *a) : ptr(a) { }
-                val(std::vector<std::pair<std::string, value>> *o) : ptr(o) { }
+                val(array_container *a) : ptr(a) { }
+                val(object_container *o) : ptr(o) { }
 
                 int    i;
                 double d;
                 bool   b;
             } m_u;
 
-            typedef std::vector<value> array_container;
-            typedef std::vector<std::pair<std::string, value>> object_container;
     };
 
     class array : public value {
         public:
             array() {
                 this->m_type = ARRAY;
-                this->m_u.ptr.a = new std::vector<value>();
+                this->m_u.ptr.a = new array_container();
             }
 
             array(std::initializer_list<value> l) {
                 this->m_type = ARRAY;
-                this->m_u.ptr.a = new std::vector<value>();
+                this->m_u.ptr.a = new array_container();
                 for (auto i = l.begin(); i != l.end(); ++i)
                     this->m_u.ptr.a->push_back(*i);
             }
@@ -330,12 +348,12 @@ namespace json {
         public:
             object() {
                 this->m_type = OBJECT;
-                this->m_u.ptr.o = new std::vector<std::pair<std::string, value>>();
+                this->m_u.ptr.o = new object_container();
             }
 
             template<typename ... Types> object(Types ... args) {
                 this->m_type = OBJECT;
-                this->m_u.ptr.o = new std::vector<std::pair<std::string, value>>();
+                this->m_u.ptr.o = new object_container();
                 vctor(args...);
             }
 
