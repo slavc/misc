@@ -1,12 +1,9 @@
 CXXFLAGS=-g -Wall -std=c++11
 
-all: json parse
+all: test
 
-json: json.o
-	$(CXX) -o $@ $(CXXFLAGS) $<
-
-parse: parse.o
-	$(CXX) -o $@ $(CXXFLAGS) $<
+test: parse.o test.o json.o
+	$(CXX) -o $@ $(CXXFLAGS) $^
 
 clean:
-	rm -f *.o json parse
+	rm -f *.o test
