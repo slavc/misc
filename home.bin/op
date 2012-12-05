@@ -7,8 +7,8 @@ op_file() {
     path="$2"
 
     case "$type" in
-    pdf)
-        mupdf "$path" > /dev/null 2>&1 &
+    pdf|ps)
+        evince "$path" > /dev/null 2>&1 &
         disown
         ;;
     chm)
