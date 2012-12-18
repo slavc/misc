@@ -1,0 +1,17 @@
+libpciaccess
+libpciaccess-devel
+imake
+udev
+libudev
+libudev-devel
+llvm
+llvm-devel
+llvm-libs
+mtdev
+mtdev-devel
+libjpeg-turbo
+libjpeg-turbo-devel
+libxkbfile
+libxkbfile-devel
+libXfont
+libXfont-devel
