@@ -15,6 +15,10 @@ op_file() {
         xchm "$path" > /dev/null 2>&1 &
         disown
         ;;
+    html|htm)
+        firefox "$path" > /dev/null 2>&1 &
+        disown
+        ;;
     *)
         echo "$path: don't know how to open a $type file" 1>&2
         return 1
