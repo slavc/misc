@@ -15,3 +15,5 @@ libxkbfile
 libxkbfile-devel
 libXfont
 libXfont-devel
+expat-devel
+doxygen

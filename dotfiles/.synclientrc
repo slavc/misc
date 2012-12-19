@@ -1,0 +1,17 @@
+TapButton1=1
+TapButton2=2
+TapButton3=3
+HorizTwoFingerScroll=1
+VertTwoFingerScroll=1
+VertEdgeScroll=0
+#CoastingFriction=255
+#CoastingSpeed=5
+PalmDetect=1
+VertHysteresis=50
+HorizHysteresis=50
+FingerHigh=50
+TapAndDragGesture=0
+RTCornerButton=0
+RBCornerButton=0
+LTCornerButton=0
+LBCornerButton=0
