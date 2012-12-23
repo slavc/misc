@@ -17,5 +17,11 @@ libXfont
 libXfont-devel
 expat-devel
 doxygen
+<<<<<<< HEAD
 libxkbfile-devel
 libXfont-devel
+=======
+bison
+pam-devel
+xorg-x11-xtrans-devel
+>>>>>>> 752f7fbae8ae8c5d5f9ebfc1db4de8c479d558df
