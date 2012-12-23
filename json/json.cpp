@@ -23,51 +23,43 @@ namespace json {
     value::value() :
         m_type(NIL)
     {
-        std::clog << "value()" << std::endl;
     }
 
     value::value(int i) :
         m_type(INTEGER),
         m_u(i)
     {
-        std::clog << "value(int i)" << std::endl;
     }
 
     value::value(double d) :
         m_type(DOUBLE),
         m_u(d)
     {
-        std::clog << "value(double d)" << std::endl;
     }
 
     value::value(const char *s) :
         m_type(STRING),
         m_u(new std::string(s))
     {
-        std::clog << "value(const char *s)" << std::endl;
     }
 
     value::value(const std::string &s) :
         m_type(STRING),
         m_u(new std::string(s))
     {
-        std::clog << "value(const std::string &s)" << std::endl;
     }
 
     value::value(bool b) :
         m_type(BOOLEAN),
         m_u(b)
     {
-        std::clog << "value(bool b)" << std::endl;
     }
 
     value::value(const value &rhs) {
-        std::clog << "value(const value &rhs)" << std::endl;
         *this = rhs;
     }
 
     value &value::operator=(const value &rhs) {
-        std::clog << "value &operator=(const value &rhs)" << std::endl;
         if (&rhs == this)
             return *this;
 
@@ -112,7 +104,6 @@ namespace json {
     }
 
     value::~value() {
-        std::clog << "virtual ~value()" << std::endl;
         switch (m_type) {
         case ARRAY:
             delete m_u.ptr.a;

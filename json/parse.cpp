@@ -21,45 +21,6 @@
 
 #include "json.hpp"
 
-class logger {
-    public:
-        logger(const std::string &func_name) :
-            m_func_name(func_name)
-        {
-            int i { s_level++ };
-            while (i-- > 0)
-                std::clog << s_indent;
-            std::clog << m_func_name << " {" << std::endl;
-        }
-
-        ~logger() {
-            int i { --s_level };
-            while (i-- > 0)
-                std::clog << s_indent;
-            std::clog << "}" << std::endl;
-        }
-
-        template<typename ... Types> void print(Types ... args) {
-            int i { s_level };
-            while (i-- > 0)
-                std::clog << s_indent;
-            vprint(args...);
-        }
-    private:
-        static int s_level;
-        static const char *const s_indent;
-        const std::string m_func_name;
-
-        template<typename ValT, typename ... Types> void vprint(const ValT &val, Types ... args) {
-            std::clog << val;
-        }
-        void vprint() {
-            std::clog << std::endl;
-        }
-};
-int logger::s_level { 0 };
-const char *const logger::s_indent { "    " };
-
 struct match_result {
     bool successful;
     json::value value;
@@ -99,8 +60,6 @@ json::value json::parse(const std::string &s) {
 }
 
 static match_result match_object(const std::string &s, std::string::size_type &pos) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return { false };
     match_space(s, pos);
@@ -132,8 +91,6 @@ static match_result match_object(const std::string &s, std::string::size_type &p
 }
 
 static bool match_space(const std::string &s, std::string::size_type &pos) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return false;
 
@@ -144,8 +101,6 @@ static bool match_space(const std::string &s, std::string::size_type &pos) {
 }
 
 static bool match_char(const std::string &s, std::string::size_type &pos, char ch) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return false;
     match_space(s, pos);
@@ -187,8 +142,6 @@ static bool match_dquote(const std::string &s, std::string::size_type &pos) {
 }
 
 static match_result match_string(const std::string &s, std::string::size_type &pos) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return { false };
     match_space(s, pos);
@@ -227,8 +180,6 @@ static match_result match_string(const std::string &s, std::string::size_type &p
 }
 
 static match_result match_value(const std::string &s, std::string::size_type &pos) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return { false };
     match_space(s, pos);
@@ -252,8 +203,6 @@ static match_result match_value(const std::string &s, std::string::size_type &po
 }
 
 static match_result match_array(const std::string &s, std::string::size_type &pos) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return { false };
     match_space(s, pos);
@@ -286,7 +235,6 @@ static match_result match_number(const std::string &s, std::string::size_type &p
     if (point_match || exp_match) {
         double d;
         d = intpart * sign;
-        std::clog << "d = intpart * sign = " << d << std::endl;
         double frac(fracpart);
         while (frac >= 1.0)
             frac /= 10.0;
@@ -324,8 +272,8 @@ static bool match_int(const std::string &s, std::string::size_type &pos, int &i,
     
     int val = 0;
     while (isdigit(s[pos])) {
-        // FIXME naive, ASCII isn't the only charset
         val *= 10;
+        // FIXME naive, ASCII isn't the only charset
         val += s[pos] - '0';
         ++pos;
     }
@@ -370,8 +318,6 @@ static bool match_exp(const std::string &s, std::string::size_type &pos, int &i)
 }
 
 static bool match_word(const std::string &s, std::string::size_type &pos, const std::string &word) {
-    logger logger { __func__ };
-
     if (pos >= s.size())
         return false;
     match_space(s, pos);

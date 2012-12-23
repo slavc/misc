@@ -17,3 +17,6 @@ libXfont
 libXfont-devel
 expat-devel
 doxygen
+bison
+pam-devel
+xorg-x11-xtrans-devel
