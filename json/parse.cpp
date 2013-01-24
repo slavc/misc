@@ -14,16 +14,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <iostream>
-#include <iomanip>
 #include <string>
 #include <cctype>
+#include <utility>
 
 #include "json.hpp"
 
 struct match_result {
     bool successful;
     json::value value;
+    match_result(match_result &&) = default;
+    match_result &operator=(match_result &&) = default;
 };
 
 static match_result  match_object(const std::string &, std::string::size_type &);
