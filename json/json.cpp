@@ -104,7 +104,6 @@ namespace json {
     }
 
     value::value(value &&v) noexcept {
-        std::clog << "value move constructor" << std::endl;
         if (&v == this)
             return;
 
@@ -116,7 +115,6 @@ namespace json {
     }
 
     value &value::operator=(value &&v) noexcept {
-        std::clog << "value move copy operator" << std::endl;
         if (&v == this)
             return *this;
 

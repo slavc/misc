@@ -68,7 +68,6 @@ namespace json {
                     bool operator==(const iterator &);
                     bool operator!=(const iterator &);
 
-
                 private:
                     iterator(size_type, value &);
 
