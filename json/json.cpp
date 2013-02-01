@@ -103,6 +103,30 @@ namespace json {
         return *this;
     }
 
+    value::value(value &&v) noexcept {
+        if (&v == this)
+            return;
+
+        m_type = v.m_type;
+        m_u = v.m_u;
+
+        v.m_type = NIL;
+        v.m_u.ptr.s = nullptr;
+    }
+
+    value &value::operator=(value &&v) noexcept {
+        if (&v == this)
+            return *this;
+
+        m_type = v.m_type;
+        m_u = v.m_u;
+
+        v.m_type = NIL;
+        v.m_u.ptr.s = nullptr;
+
+        return *this;
+    }
+
     value::~value() {
         switch (m_type) {
         case ARRAY:

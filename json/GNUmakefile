@@ -1,5 +1,6 @@
-CXXFLAGS+=-g -Wall -std=c++11 -pg
-LDFLAGS+=-pg
+CXXFLAGS+=-g -Wall -std=c++11
+#LDFLAGS+=-pg
+
 
 all: test
 

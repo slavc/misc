@@ -68,7 +68,6 @@ namespace json {
                     bool operator==(const iterator &);
                     bool operator!=(const iterator &);
 
-
                 private:
                     iterator(size_type, value &);
 
@@ -86,6 +85,8 @@ namespace json {
             value(const std::string &);
             value(const value &);
             value &operator=(const value &);
+            value(value &&) noexcept;
+            value &operator=(value &&) noexcept;
             virtual ~value();
 
             std::string str() const;

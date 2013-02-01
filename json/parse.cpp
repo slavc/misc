@@ -14,10 +14,9 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <iostream>
-#include <iomanip>
 #include <string>
 #include <cctype>
+#include <utility>
 
 #include "json.hpp"
 
@@ -54,7 +53,7 @@ json::value json::parse(const std::string &s) {
     match_result result(match_value(s, pos));
 
     if (result.successful)
-        return result.value;
+        return std::move(result.value);
     else
         throw json::parse_error();
 }
@@ -87,7 +86,7 @@ static match_result match_object(const std::string &s, std::string::size_type &p
         object[str_result.value] = val_result.value;
     } while (match_comma(s, pos));
 
-    return { match_brace_close(s, pos), object };
+    return { match_brace_close(s, pos), std::move(object) };
 }
 
 static bool match_space(const std::string &s, std::string::size_type &pos) {
@@ -197,7 +196,7 @@ static match_result match_value(const std::string &s, std::string::size_type &po
     for (auto f : funcs) {
         match_result result(f(s, pos));
         if (result.successful)
-            return { true, result.value };
+            return std::move(result);
     }
     return { false };
 }
@@ -215,7 +214,7 @@ static match_result match_array(const std::string &s, std::string::size_type &po
         if (result.successful)
             array.push_back(result.value);
     } while (match_comma(s, pos));
-    return { match_bracket_close(s, pos), array };
+    return { match_bracket_close(s, pos), std::move(array) };
 }
 
 static match_result match_number(const std::string &s, std::string::size_type &pos) {
