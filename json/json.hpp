@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Sviatoslav Chagaev <sviatoslav.chagaev@gmail.com>
+ * Copyright (c) 2012, 2013 Sviatoslav Chagaev <sviatoslav.chagaev@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,7 @@
 #include <vector>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
 namespace json {
     enum types {
@@ -55,6 +56,8 @@ namespace json {
     class value {
         public:
 
+            /* Types */
+
             class iterator {
                 public:
                     typedef std::vector<value>::size_type size_type;
@@ -77,6 +80,8 @@ namespace json {
                 friend class value;
             };
 
+            /* Structors and copy-control */
+
             value();
             value(int);
             value(bool);
@@ -89,11 +94,16 @@ namespace json {
             value &operator=(value &&) noexcept;
             virtual ~value();
 
-            std::string str() const;
-            value &push_back(const value &);
-            iterator begin();
-            iterator end();
-            value &operator[](const value &);
+            /* Methods */
+
+            std::string  str        ()                       const;
+            value&       push_back  (const value &);
+            iterator     begin      ();
+            iterator     end        ();
+            value&       operator[] (const value &);
+            const value& operator[] (const value &)          const;
+            bool         operator== (const std::string &rhs) const;
+            value&       erase      (const std::string &key);
 
         protected:
             typedef std::vector<value> array_container;
@@ -107,8 +117,8 @@ namespace json {
                     ptr(object_container *o) : o(o) { }
 
                     std::string       *s;
-                    array_container   *a; // array
-                    object_container  *o; // object
+                    array_container   *a;
+                    object_container  *o;
                 } ptr;
 
                 val() : ptr() { }
@@ -123,6 +133,8 @@ namespace json {
                 double d;
                 bool   b;
             } m_u;
+
+            value &get(const value &key);
     };
 
     class array : public value {

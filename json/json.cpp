@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 Sviatoslav Chagaev <sviatoslav.chagaev@gmail.com>
+ * Copyright (c) 2012, 2013 Sviatoslav Chagaev <sviatoslav.chagaev@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -212,7 +212,36 @@ namespace json {
             throw illegal_op();
     }
 
-    value &value::operator[](const value &val) {
+    value &value::operator[](const value &key) {
+        return get(key);
+    }
+
+    const value &value::operator[](const value &key) const {
+        return const_cast<value *>(this)->get(key);
+    }
+
+    bool value::operator==(const std::string &rhs) const {
+        return m_type == STRING && *m_u.ptr.s == rhs;
+    }
+
+    value &value::erase(const std::string &key) {
+        if (m_type != OBJECT)
+            throw illegal_op();
+
+        m_u.ptr.o->erase(
+            std::remove_if(
+                m_u.ptr.o->begin(),
+                m_u.ptr.o->end(),
+                [&key] (std::pair<std::string, value> &p) {
+                    return p.first == key;
+                }
+            )
+        );
+
+        return *this;
+    }
+
+    value &value::get(const value &val) {
         if (val.m_type == STRING && m_type == OBJECT) {
             const std::string key(*val.m_u.ptr.s);
             if (m_type != OBJECT)
