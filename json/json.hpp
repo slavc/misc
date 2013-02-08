@@ -17,12 +17,10 @@
 #ifndef JSON_HPP
 #define JSON_HPP
 
-#include <iostream>
 #include <string>
 #include <vector>
-#include <sstream>
+#include <unordered_map>
 #include <stdexcept>
-#include <algorithm>
 
 namespace json {
     enum types {
@@ -58,27 +56,7 @@ namespace json {
 
             /* Types */
 
-            class iterator {
-                public:
-                    typedef std::vector<value>::size_type size_type;
-
-                    std::string key();
-                    size_type idx();
-                    iterator &operator++();
-                    iterator operator++(int);
-                    value &operator*();
-                    value *operator->();
-                    bool operator==(const iterator &);
-                    bool operator!=(const iterator &);
-
-                private:
-                    iterator(size_type, value &);
-
-                    size_type m_idx;
-                    value &m_val;
-
-                friend class value;
-            };
+            typedef std::vector<value>::size_type size_type;
 
             /* Structors and copy-control */
 
@@ -92,49 +70,151 @@ namespace json {
             value &operator=(const value &);
             value(value &&) noexcept;
             value &operator=(value &&) noexcept;
-            virtual ~value();
+            ~value();
+
+            value &operator=(double d) {
+                switch (m_type) {
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case STRING:
+                    delete m_u.ptr.s;
+                    break;
+                default:
+                    break;
+                }
+                m_type = DOUBLE;
+                m_u.d = d;
+                return *this;
+            }
+
+            value &operator=(int i) {
+                switch (m_type) {
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case STRING:
+                    delete m_u.ptr.s;
+                    break;
+                default:
+                    break;
+                }
+                m_type = INTEGER;
+                m_u.i = i;
+                return *this;
+            }
+
+            value &operator=(bool b) {
+                switch (m_type) {
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case STRING:
+                    delete m_u.ptr.s;
+                    break;
+                default:
+                    break;
+                }
+                m_type = BOOLEAN;
+                m_u.b = b;
+                return *this;
+            }
+
+            value &operator=(const std::string &s) {
+                switch (m_type) {
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    break;
+                case ARRAY:
+                    delete m_u.ptr.a;
+                    break;
+                case STRING:
+                    break;
+                default:
+                    m_u.ptr.s = new std::string;
+                    break;
+                }
+                m_type = STRING;
+                *m_u.ptr.s = s;
+                return *this;
+            }
+
+            std::string sval() const {
+                if (m_type == STRING)
+                    return *m_u.ptr.s;
+                else if (use_exceptions)
+                    throw illegal_op();
+                else
+                    return "";
+            }
 
             /* Methods */
 
             std::string  str        ()                       const;
             value&       push_back  (const value &);
-            iterator     begin      ();
-            iterator     end        ();
-            value&       operator[] (const value &);
-            const value& operator[] (const value &)          const;
+            value&       push_back  (value &&v) {
+                if (m_type == ARRAY)
+                    m_u.ptr.a->push_back(std::move(v));
+                else if (use_exceptions)
+                    throw illegal_op();
+                return *this;
+            }
+            value&       operator[] (const std::string &);
+            const value& operator[] (const std::string &)    const;
+            value&       operator[] (size_t);
+            const value& operator[] (size_t)                 const;
             bool         operator== (const std::string &rhs) const;
             value&       erase      (const std::string &key);
 
+            /* Static members */
+
+            static bool use_exceptions;
+
         protected:
-            typedef std::vector<value> array_container;
-            typedef std::vector<std::pair<std::string, value>> object_container;
+
+            /* Types */
+
+            typedef std::vector<value>           array_container;
+            typedef std::unordered_map<std::string, value> object_container;
+
+            /* Members */
+
             enum types m_type;
+
             union val {
                 union ptr {
-                    ptr() : s(nullptr) { }
-                    ptr(std::string *s) : s(s) { }
-                    ptr(array_container *a) : a(a) { }
-                    ptr(object_container *o) : o(o) { }
+                    ptr()                    : p(nullptr) { }
+                    ptr(std::string *s)      : p(s)       { }
+                    ptr(array_container *a)  : p(a)       { }
+                    ptr(object_container *o) : p(o)       { }
 
+                    void              *p;
                     std::string       *s;
                     array_container   *a;
                     object_container  *o;
                 } ptr;
 
-                val() : ptr() { }
-                val(int i) : i(i) { }
-                val(double d) : d(d) { }
-                val(bool b) : b(b) { }
-                val(std::string *s) : ptr(s) { }
-                val(array_container *a) : ptr(a) { }
+                val()                    : ptr()  { }
+                val(int i)               : i(i)   { }
+                val(double d)            : d(d)   { }
+                val(bool b)              : b(b)   { }
+                val(std::string *s)      : ptr(s) { }
+                val(array_container *a)  : ptr(a) { }
                 val(object_container *o) : ptr(o) { }
 
                 int    i;
                 double d;
                 bool   b;
             } m_u;
-
-            value &get(const value &key);
     };
 
     class array : public value {
@@ -158,16 +238,7 @@ namespace json {
 
         private:
             template<typename ... Types> void vctor(const std::string &key, const value &val, Types ... args) {
-                auto i = this->m_u.ptr.o->begin();
-                for (/* empty */; i != this->m_u.ptr.o->end(); ++i)
-                    if (i->first == key)
-                        break;
-
-                if (i == this->m_u.ptr.o->end())
-                    this->m_u.ptr.o->push_back(std::make_pair(key, val));
-                else
-                    *i = std::make_pair(key, val);
-
+                this->m_u.ptr.o->emplace(key, val);
                 vctor(args...);
             }
 
@@ -177,6 +248,7 @@ namespace json {
 
     value parse(const std::string &s);
 };
+
 
 #endif
 

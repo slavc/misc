@@ -14,10 +14,12 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <iostream>
 #include <string>
+#include <sstream>
 
 #include "json.hpp"
+
+bool json::value::use_exceptions = true;
 
 namespace json {
     value::value() :
@@ -122,7 +124,7 @@ namespace json {
         m_u = v.m_u;
 
         v.m_type = NIL;
-        v.m_u.ptr.s = nullptr;
+        v.m_u.ptr.p = nullptr;
 
         return *this;
     }
@@ -138,10 +140,7 @@ namespace json {
         case STRING:
             delete m_u.ptr.s;
             break;
-        case NIL:
-        case INTEGER:
-        case DOUBLE:
-        case BOOLEAN:
+        default:
             break;
         }
     }
@@ -196,28 +195,53 @@ namespace json {
         return *this;
     }
 
-    value::iterator value::begin() {
-        if (m_type == ARRAY || m_type == OBJECT)
-            return { 0, *this };
-        else
+    value &value::operator[](const std::string &key) {
+        static value nil;
+        if (m_type == OBJECT)
+            return (*m_u.ptr.o)[key];
+        else if (use_exceptions)
             throw illegal_op();
+        else {
+            nil = value();
+            return nil;
+        }
     }
 
-    value::iterator value::end() {
-        if (m_type == ARRAY)
-            return { m_u.ptr.a->size(), *this };
-        else if (m_type == OBJECT)
-            return { m_u.ptr.o->size(), *this };
-        else
+    const value &value::operator[](const std::string &key) const {
+        static const value nil;
+        if (m_type == OBJECT)
+            return (*m_u.ptr.o)[key];
+        else if (use_exceptions)
             throw illegal_op();
+        else
+            return nil;
     }
 
-    value &value::operator[](const value &key) {
-        return get(key);
+    value &value::operator[](size_t idx) {
+        static value nil;
+        if (m_type == ARRAY) {
+            if (idx < 0 || idx >= m_u.ptr.a->size())
+                throw out_of_bounds();
+            return (*m_u.ptr.a)[idx];
+        } else if (use_exceptions) {
+            throw illegal_op();
+        } else {
+            nil = value();
+            return nil;
+        }
     }
 
-    const value &value::operator[](const value &key) const {
-        return const_cast<value *>(this)->get(key);
+    const value &value::operator[](size_t idx) const {
+        static const value nil;
+        if (m_type == ARRAY) {
+            if (idx < 0 || idx >= m_u.ptr.a->size())
+                throw out_of_bounds();
+            return (*m_u.ptr.a)[idx];
+        } else if (use_exceptions) {
+            throw illegal_op();
+        } else {
+            return nil;
+        }
     }
 
     bool value::operator==(const std::string &rhs) const {
@@ -228,87 +252,9 @@ namespace json {
         if (m_type != OBJECT)
             throw illegal_op();
 
-        m_u.ptr.o->erase(
-            std::remove_if(
-                m_u.ptr.o->begin(),
-                m_u.ptr.o->end(),
-                [&key] (std::pair<std::string, value> &p) {
-                    return p.first == key;
-                }
-            )
-        );
+        m_u.ptr.o->erase(key);
 
         return *this;
-    }
-
-    value &value::get(const value &val) {
-        if (val.m_type == STRING && m_type == OBJECT) {
-            const std::string key(*val.m_u.ptr.s);
-            if (m_type != OBJECT)
-                throw illegal_op();
-            for (auto i = begin(); i != end(); ++i)
-                if (i.key() == key)
-                    return *i;
-            this->m_u.ptr.o->push_back(std::make_pair(key, value { }));
-            return this->m_u.ptr.o->back().second;
-        } else if (val.m_type == INTEGER && m_type == ARRAY) {
-            size_t idx(val.m_u.i);
-            if (m_type != ARRAY)
-                throw illegal_op();
-            if (idx < 0 || idx >= m_u.ptr.a->size())
-                throw out_of_bounds { };
-            return (*m_u.ptr.a)[idx];
-        } else
-            throw illegal_op { };
-    }
-
-    std::string value::iterator::key() {
-        if (m_val.m_type == OBJECT)
-            return (*m_val.m_u.ptr.o)[m_idx].first;
-        else
-            throw illegal_op();
-    }
-
-    value::iterator::size_type value::iterator::idx() {
-        return m_idx;
-    }
-
-    value::iterator &value::iterator::operator++() {
-        ++m_idx;
-        return *this;
-    }
-
-    value::iterator value::iterator::operator++(int) {
-        iterator prev { *this };
-        ++m_idx;
-        return prev;
-    }
-
-    value &value::iterator::operator*() {
-        if (m_val.m_type == ARRAY)
-            return (*m_val.m_u.ptr.a)[m_idx];
-        else if (m_val.m_type == OBJECT)
-            return (*m_val.m_u.ptr.o)[m_idx].second;
-        else
-            throw illegal_op { };
-    }
-
-    value *value::iterator::operator->() {
-        return &operator*();
-    }
-
-    bool value::iterator::operator==(const iterator &rhs) {
-        return &m_val == &rhs.m_val && m_idx == rhs.m_idx;
-    }
-
-    bool value::iterator::operator!=(const iterator &rhs) {
-        return !operator==(rhs);
-    }
-
-    value::iterator::iterator(value::iterator::size_type idx, value &val) :
-        m_idx(idx),
-        m_val(val)
-    {
     }
 
     array::array() {
