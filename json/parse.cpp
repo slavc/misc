@@ -36,67 +36,75 @@ static bool match_number(const std::string &s, json::value &retval, std::string:
 static bool match_int(const std::string &s, std::string::size_type &pos, int &i, bool must_start_nonzero = true);
 static bool match_point(const std::string &s, std::string::size_type &pos);
 static bool match_exp(const std::string &s, std::string::size_type &pos, int &i);
-static bool match_true(const std::string &s, json::value &retval, std::string::size_type &pos);
-static bool match_false(const std::string &s, json::value &retval, std::string::size_type &pos);
-static bool match_null(const std::string &s, json::value &retval, std::string::size_type &pos);
 
 json::value json::parse(const std::string &s) {
     std::string::size_type pos(0);
     json::value val;
     if (match_value(s, val, pos))
         return std::move(val);
-    else {
-        //std::clog << "parse failed at pos " << pos << ", context: ``" << s.substr(std::min(pos - 3, pos), 6) << "''" << std::endl;
+    else if (json::value::use_exceptions)
         throw json::parse_error();
-    }
+    else
+        return val;
 }
 
 static bool match_value(const std::string &s, json::value &retval, std::string::size_type &pos) {
+    SKIP_SPACE;
+
     static const struct {
         char from;
         char to;
         bool (*match_func)(const std::string &, json::value &, std::string::size_type &);
     } char2func[] = {
+        { '"', '"', match_string },
         { '{', '{', match_object },
         { '[', '[', match_array  },
-        { '"', '"', match_string },
         { '-', '-', match_number },
         // FIXME naive, ASCII isn't the only charset
         { '0', '9', match_number },
-        { 't', 't', match_true   },
-        { 'f', 'f', match_false  },
-        { 'n', 'n', match_null   },
-        { '\0', '\0', nullptr },
-    }, *p;
-
-    SKIP_SPACE;
-    for (p = char2func; p->match_func != nullptr; ++p) {
-        if (s[pos] >= p->from && s[pos] <= p->to)
-            return p->match_func(s, retval, pos);
+    };
+    for (auto &i : char2func) {
+        if (s[pos] >= i.from && s[pos] <= i.to)
+            return i.match_func(s, retval, pos);
     }
+
+    static const struct {
+        std::string term;
+        json::value val;
+    } terminals[] = {
+        { "true",  json::value(true)  },
+        { "false", json::value(false) },
+        { "null",  json::value()      },
+    };
+    for (auto &i : terminals) {
+        if (s.compare(pos, i.term.size(), i.term) == 0) {
+            pos += i.term.size();
+            retval = i.val;
+            return true;
+        }
+    }
+
     return false;
 }
 
 static bool match_object(const std::string &s, json::value &retval, std::string::size_type &pos) {
-    /*
     json::object obj;
     json::value  key;
     json::value  val;
-    */
 
     ++pos;
     for ( ;; ) {
         SKIP_SPACE;
-        if (match_string(s, retval, pos)) {
+        if (match_string(s, key, pos)) {
             SKIP_SPACE;
             if (s[pos] == ':')
                 ++pos;
             else
                 return false;
             SKIP_SPACE;
-            if (!match_value(s, retval, pos))
+            if (!match_value(s, val, pos))
                 return false;
-            // obj[key.sval()] = std::move(val);
+            obj[key.sval()] = std::move(val);
             SKIP_SPACE;
             if (s[pos] == '}') {
                 ++pos;
@@ -110,7 +118,7 @@ static bool match_object(const std::string &s, json::value &retval, std::string:
             ++pos;
         }
     }
-    //retval = std::move(obj);
+    retval = std::move(obj);
     return true;
 }
 
@@ -151,24 +159,22 @@ static bool match_string(const std::string &s, json::value &retval, std::string:
         return false;
     } else {
         ++pos;
-        // retval = str;
+        retval = str;
         str.clear();
         return true;
     }
 }
 
 static bool match_array(const std::string &s, json::value &retval, std::string::size_type &pos) {
-    /*
     json::array arr;
     json::value val;
-    */
 
     ++pos;
     for ( ;; ) {
         SKIP_SPACE;
-        if (!match_value(s, retval, pos))
+        if (!match_value(s, val, pos))
             return false;
-        //arr.push_back(std::move(val));
+        arr.push_back(std::move(val));
         SKIP_SPACE
         if (s[pos] == ']') {
             ++pos;
@@ -179,7 +185,7 @@ static bool match_array(const std::string &s, json::value &retval, std::string::
             ++pos;
         }
     }
-    // retval = std::move(arr);
+    retval = std::move(arr);
     return true;
 }
 
@@ -220,10 +226,10 @@ static bool match_number(const std::string &s, json::value &retval, std::string:
                     d /= 10.0;
             }
         }
-        // retval = d;
+        retval = d;
         return true;
     } else {
-        // retval = intpart * sign;
+        retval = intpart * sign;
         return true;
     }
 }
@@ -286,32 +292,5 @@ static bool match_exp(const std::string &s, std::string::size_type &pos, int &i)
     i = val * sign;
 
     return true;
-}
-
-static bool match_true(const std::string &s, json::value &retval, std::string::size_type &pos) {
-    static const std::string rue("rue");
-    if (s.compare(pos, rue.size(), rue) == 0) {
-        // retval = true;
-        return true;
-    } else
-        return false;
-}
-
-static bool match_false(const std::string &s, json::value &retval, std::string::size_type &pos) {
-    static const std::string alse("alse");
-    if (s.compare(pos, alse.size(), alse) == 0) {
-        // retval = true;
-        return true;
-    } else
-        return false;
-}
-
-static bool match_null(const std::string &s, json::value &retval, std::string::size_type &pos) {
-    static const std::string ull("ull");
-    if (s.compare(pos, ull.size(), ull) == 0) {
-        // retval = true;
-        return true;
-    } else
-        return false;
 }
 

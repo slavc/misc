@@ -19,7 +19,7 @@
 
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <stdexcept>
 
 namespace json {
@@ -67,113 +67,47 @@ namespace json {
             value(const char *);
             value(const std::string &);
             value(const value &);
-            value &operator=(const value &);
             value(value &&) noexcept;
-            value &operator=(value &&) noexcept;
-            ~value();
-
-            value &operator=(double d) {
+            inline ~value() {
                 switch (m_type) {
-                case OBJECT:
-                    delete m_u.ptr.o;
-                    break;
                 case ARRAY:
                     delete m_u.ptr.a;
-                    break;
+                    return;
+                case OBJECT:
+                    delete m_u.ptr.o;
+                    return;
                 case STRING:
                     delete m_u.ptr.s;
-                    break;
+                    return;
                 default:
-                    break;
+                    return;
                 }
-                m_type = DOUBLE;
-                m_u.d = d;
-                return *this;
             }
 
-            value &operator=(int i) {
-                switch (m_type) {
-                case OBJECT:
-                    delete m_u.ptr.o;
-                    break;
-                case ARRAY:
-                    delete m_u.ptr.a;
-                    break;
-                case STRING:
-                    delete m_u.ptr.s;
-                    break;
-                default:
-                    break;
-                }
-                m_type = INTEGER;
-                m_u.i = i;
-                return *this;
-            }
-
-            value &operator=(bool b) {
-                switch (m_type) {
-                case OBJECT:
-                    delete m_u.ptr.o;
-                    break;
-                case ARRAY:
-                    delete m_u.ptr.a;
-                    break;
-                case STRING:
-                    delete m_u.ptr.s;
-                    break;
-                default:
-                    break;
-                }
-                m_type = BOOLEAN;
-                m_u.b = b;
-                return *this;
-            }
-
-            value &operator=(const std::string &s) {
-                switch (m_type) {
-                case OBJECT:
-                    delete m_u.ptr.o;
-                    break;
-                case ARRAY:
-                    delete m_u.ptr.a;
-                    break;
-                case STRING:
-                    break;
-                default:
-                    m_u.ptr.s = new std::string;
-                    break;
-                }
-                m_type = STRING;
-                *m_u.ptr.s = s;
-                return *this;
-            }
-
-            std::string sval() const {
-                if (m_type == STRING)
-                    return *m_u.ptr.s;
-                else if (use_exceptions)
-                    throw illegal_op();
-                else
-                    return "";
-            }
+            value& operator=(const value&);
+            value& operator=(value&&) noexcept;
+            value& operator=(double d);
+            value& operator=(int i);
+            value& operator=(bool b);
+            value& operator=(const std::string& s);
+            value& operator=(std::string&& s);
 
             /* Methods */
 
-            std::string  str        ()                       const;
-            value&       push_back  (const value &);
-            value&       push_back  (value &&v) {
-                if (m_type == ARRAY)
-                    m_u.ptr.a->push_back(std::move(v));
-                else if (use_exceptions)
-                    throw illegal_op();
-                return *this;
-            }
-            value&       operator[] (const std::string &);
-            const value& operator[] (const std::string &)    const;
-            value&       operator[] (size_t);
-            const value& operator[] (size_t)                 const;
-            bool         operator== (const std::string &rhs) const;
-            value&       erase      (const std::string &key);
+            const std::string& sval       ()                    const;
+            int                ival       ()                    const;
+            double             dval       ()                    const;
+            bool               bval       ()                    const;
+
+            std::string        str        ()                    const;
+            void               push_back  (const value&);
+            void               push_back  (value&& v);
+            value&             operator[] (const std::string&);
+            const value&       operator[] (const std::string&)  const;
+            value&             operator[] (size_t);
+            const value&       operator[] (size_t)              const;
+            bool               operator== (const std::string&)  const;
+            value&             erase      (const std::string&);
 
             /* Static members */
 
@@ -184,7 +118,7 @@ namespace json {
             /* Types */
 
             typedef std::vector<value>           array_container;
-            typedef std::unordered_map<std::string, value> object_container;
+            typedef std::map<std::string, value> object_container;
 
             /* Members */
 
@@ -192,9 +126,9 @@ namespace json {
 
             union val {
                 union ptr {
-                    ptr()                    : p(nullptr) { }
-                    ptr(std::string *s)      : p(s)       { }
-                    ptr(array_container *a)  : p(a)       { }
+                    ptr()                                 { }
+                    ptr(std::string      *s) : p(s)       { }
+                    ptr(array_container  *a) : p(a)       { }
                     ptr(object_container *o) : p(o)       { }
 
                     void              *p;
@@ -203,7 +137,7 @@ namespace json {
                     object_container  *o;
                 } ptr;
 
-                val()                    : ptr()  { }
+                val()                             { }
                 val(int i)               : i(i)   { }
                 val(double d)            : d(d)   { }
                 val(bool b)              : b(b)   { }
@@ -237,8 +171,8 @@ namespace json {
             }
 
         private:
-            template<typename ... Types> void vctor(const std::string &key, const value &val, Types ... args) {
-                this->m_u.ptr.o->emplace(key, val);
+            template<typename ... Types> void vctor(const std::string& key, const value& val, Types ... args) {
+                (*this->m_u.ptr.o)[key] = val;
                 vctor(args...);
             }
 

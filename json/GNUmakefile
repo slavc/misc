@@ -2,21 +2,30 @@ CXXFLAGS+=-Wall
 CXXFLAGS+=-std=c++11
 #CXXFLAGS+=-g
 CXXFLAGS+=-O2
-CXXFLAGS+=-pg
+#CXXFLAGS+=-pg
 
 CFLAGS+=-Wall
 #CFLAGS+=-g
 
-LDFLAGS+=-pg
+#LDFLAGS+=-pg
+#LDFLAGS+=-g
 
 
 all: test
 
 test: parse.o test.o json.o
-	$(CXX) -o $@ $(CXXFLAGS) $(LDFLAGS) $^
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
 js0n: js0n.o
-	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
 	rm -f *.o test js0n gmon.out
+
+remake: clean all
+
+gprof: test
+	time ./test auctions.json > gprof.out
+	gprof test gmon.out >> gprof.out
+	less gprof.out
+	
