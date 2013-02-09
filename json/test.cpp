@@ -51,37 +51,35 @@ int main(int argc, char **argv) {
         for (--argc, ++argv; argc > 0; --argc, ++argv) {
             std::ifstream in(*argv);
 
-            if (in) {
-                std::ostringstream ostr;
-                std::string line;
-
-                while (getline(in, line))
-                    ostr << line << std::endl;
-                in.close();
-
-                std::string buf(ostr.str());
-                ostr.str("");
-
-                /*
-                struct timeval tv1, tv2;
-                gettimeofday(&tv1, NULL);
-                */
-                json::value val(json::parse(buf));
-                //gettimeofday(&tv2, NULL);
-
-                /*
-                unsigned long long usec1 = tv1.tv_sec * usec_in_sec + tv1.tv_usec;
-                unsigned long long usec2 = tv2.tv_sec * usec_in_sec + tv2.tv_usec;
-                unsigned long long dusec = usec2 - usec1;
-
-                unsigned int sec = dusec / usec_in_sec;
-                unsigned int usec = dusec % usec_in_sec;
-                */
-
-                //std::cout << *argv << ": " << sec << "s " << usec << "us" << std::endl;
-
-                //std::cout << val.str() << std::endl;
+            if (!in) {
+                std::cerr << *argv << ": failed to open" << std::endl;
+                continue;
             }
+
+            std::string line, buf;
+            while (std::getline(in, line))
+                buf.append(line);
+            in.close();
+
+            /*
+            struct timeval tv1, tv2;
+            gettimeofday(&tv1, NULL);
+            */
+            json::value val(json::parse(buf));
+            //gettimeofday(&tv2, NULL);
+
+            /*
+            unsigned long long usec1 = tv1.tv_sec * usec_in_sec + tv1.tv_usec;
+            unsigned long long usec2 = tv2.tv_sec * usec_in_sec + tv2.tv_usec;
+            unsigned long long dusec = usec2 - usec1;
+
+            unsigned int sec = dusec / usec_in_sec;
+            unsigned int usec = dusec % usec_in_sec;
+            */
+
+            //std::cout << *argv << ": " << sec << "s " << usec << "us" << std::endl;
+
+            //std::cout << val.str() << std::endl;
         }
     } else {
         test();

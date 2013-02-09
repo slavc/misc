@@ -25,7 +25,7 @@ clean:
 remake: clean all
 
 gprof: test
-	time ./test auctions.json > gprof.out
+	./test auctions.json
 	gprof test gmon.out >> gprof.out
 	less gprof.out
 	

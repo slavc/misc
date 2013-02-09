@@ -138,8 +138,8 @@ static const char *gen_escape_tab() {
 
 static bool match_string(const std::string &s, json::value &retval, std::string::size_type &pos) {
     static const char *escape_tab = gen_escape_tab();
-    static bool        do_escape;
-    static std::string str;
+    bool               do_escape;
+    std::string        str;
 
     str.reserve(32);
 
@@ -159,8 +159,7 @@ static bool match_string(const std::string &s, json::value &retval, std::string:
         return false;
     } else {
         ++pos;
-        retval = str;
-        str.clear();
+        retval = std::move(str);
         return true;
     }
 }
