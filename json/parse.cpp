@@ -194,6 +194,7 @@ static bool match_number(const std::string &s, json::value &retval, std::string:
     int intpart, fracpart, exp;
     bool point_matched, exp_matched;
 
+    fracpart = 0;
     sign = 1;
     if (s[pos] == '-') {
         sign = -1;
