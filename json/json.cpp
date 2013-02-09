@@ -128,44 +128,6 @@ namespace json {
         return *this;
     }
 
-    /*
-    value& value::operator=(const value& rhs) {
-        if (&rhs == this)
-            return *this;
-
-        switch (m_type) {
-        case STRING:
-            delete m_u.ptr.s;
-            break;
-        case OBJECT:
-            delete m_u.ptr.o;
-            break;
-        case ARRAY:
-            delete m_u.ptr.a;
-            break;
-        default:
-            break;
-        }
-
-        switch (rhs.m_type) {
-        case STRING:
-            m_u.ptr.s = new std::string(*rhs.m_u.ptr.s);
-            break;
-        case OBJECT:
-            m_u.ptr.o = new object_container(*rhs.m_u.ptr.o);
-            break;
-        case ARRAY:
-            m_u.ptr.a = new array_container(*rhs.m_u.ptr.a);
-            break;
-        default:
-            break;
-        }
-        m_type = rhs.m_type;
-
-        return *this;
-    }
-    */
-
     value::value(value &&v) noexcept {
         if (&v == this)
             return;
