@@ -17,34 +17,10 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <sstream>
-
-#include <sys/time.h>
 
 #include "json.hpp"
 
-static const size_t usec_in_sec = 1000000;
-
-static void test() {
-    json::object obj {
-        "key1", 123,
-        "key2", 42.42,
-        "key3", true,
-        "key4", false,
-        "key5", json::array {
-            123,
-            444,
-            555,
-        },
-    };
-
-    std::string s(obj.str());
-
-    json::value obj2(json::parse(s));
-
-    std::cout << obj.str() << std::endl;
-    std::cout << obj2.str() << std::endl;
-}
+static void test();
 
 int main(int argc, char **argv) {
     if (argc > 1) {
@@ -61,25 +37,7 @@ int main(int argc, char **argv) {
                 buf.append(line);
             in.close();
 
-            /*
-            struct timeval tv1, tv2;
-            gettimeofday(&tv1, NULL);
-            */
             json::value val(json::parse(buf));
-            //gettimeofday(&tv2, NULL);
-
-            /*
-            unsigned long long usec1 = tv1.tv_sec * usec_in_sec + tv1.tv_usec;
-            unsigned long long usec2 = tv2.tv_sec * usec_in_sec + tv2.tv_usec;
-            unsigned long long dusec = usec2 - usec1;
-
-            unsigned int sec = dusec / usec_in_sec;
-            unsigned int usec = dusec % usec_in_sec;
-            */
-
-            //std::cout << *argv << ": " << sec << "s " << usec << "us" << std::endl;
-
-            //std::cout << val.str() << std::endl;
         }
     } else {
         test();
@@ -87,3 +45,40 @@ int main(int argc, char **argv) {
 
     return 0;
 }
+
+static void test() {
+    json::object obj {
+        "key1", 123,
+        "key2", 42.42,
+        "key3", true,
+        "key4", false,
+        "key5", json::array {
+            123,
+            444,
+            555,
+            json::object {
+                "aaa", true,
+                "bbb", false,
+                "ccc", 42,
+                "ddd", 1.0/9.0,
+                "eee", json::value(),
+                "fff", json::array {
+                    "some text",
+                    42,
+                    3.0/9.0,
+                    true,
+                    false,
+                    json::value(),
+                },
+            },
+        },
+    };
+
+    std::string s(obj.str());
+
+    json::value obj2(json::parse(s));
+
+    std::cout << obj.str() << std::endl;
+    std::cout << obj2.str() << std::endl;
+}
+
