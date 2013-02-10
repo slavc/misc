@@ -64,20 +64,19 @@ namespace json {
             value(int);
             value(bool);
             value(double);
-            value(const char *);
             value(const std::string &);
             value(const value &);
             value(value &&) noexcept;
             inline ~value() {
                 switch (m_type) {
                 case ARRAY:
-                    delete m_u.ptr.a;
+                    delete m_u.a;
                     return;
                 case OBJECT:
-                    delete m_u.ptr.o;
+                    delete m_u.o;
                     return;
                 case STRING:
-                    delete m_u.ptr.s;
+                    delete m_u.s;
                     return;
                 default:
                     return;
@@ -124,30 +123,13 @@ namespace json {
 
             enum types m_type;
 
-            union val {
-                union ptr {
-                    ptr()                                 { }
-                    ptr(std::string      *s) : p(s)       { }
-                    ptr(array_container  *a) : p(a)       { }
-                    ptr(object_container *o) : p(o)       { }
-
-                    void              *p;
-                    std::string       *s;
-                    array_container   *a;
-                    object_container  *o;
-                } ptr;
-
-                val()                             { }
-                val(int i)               : i(i)   { }
-                val(double d)            : d(d)   { }
-                val(bool b)              : b(b)   { }
-                val(std::string *s)      : ptr(s) { }
-                val(array_container *a)  : ptr(a) { }
-                val(object_container *o) : ptr(o) { }
-
-                int    i;
-                double d;
-                bool   b;
+            union {
+                std::string      *s;
+                array_container  *a;
+                object_container *o;
+                int               i;
+                double            d;
+                bool              b;
             } m_u;
     };
 
@@ -161,18 +143,18 @@ namespace json {
         public:
             object() {
                 this->m_type = OBJECT;
-                this->m_u.ptr.o = new object_container();
+                this->m_u.o = new object_container();
             }
 
             template<typename ... Types> object(Types ... args) {
                 this->m_type = OBJECT;
-                this->m_u.ptr.o = new object_container();
+                this->m_u.o = new object_container();
                 vctor(args...);
             }
 
         private:
             template<typename ... Types> void vctor(const std::string& key, const value& val, Types ... args) {
-                (*this->m_u.ptr.o)[key] = val;
+                (*this->m_u.o)[key] = val;
                 vctor(args...);
             }
 

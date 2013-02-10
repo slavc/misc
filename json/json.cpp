@@ -28,33 +28,27 @@ namespace json {
     }
 
     value::value(int i) :
-        m_type(INTEGER),
-        m_u(i)
+        m_type(INTEGER)
     {
+        m_u.i = i;
     }
 
     value::value(double d) :
-        m_type(DOUBLE),
-        m_u(d)
+        m_type(DOUBLE)
     {
-    }
-
-    value::value(const char *s) :
-        m_type(STRING),
-        m_u(new std::string(s))
-    {
+        m_u.d = d;
     }
 
     value::value(const std::string &s) :
-        m_type(STRING),
-        m_u(new std::string(s))
+        m_type(STRING)
     {
+        m_u.s = new std::string(s);
     }
 
     value::value(bool b) :
-        m_type(BOOLEAN),
-        m_u(b)
+        m_type(BOOLEAN)
     {
+        m_u.b = b;
     }
 
     value::value(const value &rhs) :
@@ -70,13 +64,13 @@ namespace json {
         if (m_type == rhs.m_type) {
             switch (m_type) {
             case STRING:
-                *m_u.ptr.s = *rhs.m_u.ptr.s;
+                *m_u.s = *rhs.m_u.s;
                 break;
             case ARRAY:
-                *m_u.ptr.a = *rhs.m_u.ptr.a;
+                *m_u.a = *rhs.m_u.a;
                 break;
             case OBJECT:
-                *m_u.ptr.o = *rhs.m_u.ptr.o;
+                *m_u.o = *rhs.m_u.o;
                 break;
             case DOUBLE:
                 m_u.d = rhs.m_u.d;
@@ -93,13 +87,13 @@ namespace json {
         } else {
             switch (m_type) {
             case STRING:
-                delete m_u.ptr.s;
+                delete m_u.s;
                 break;
             case ARRAY:
-                delete m_u.ptr.a;
+                delete m_u.a;
                 break;
             case OBJECT:
-                delete m_u.ptr.o;
+                delete m_u.o;
                 break;
             default:
                 break;
@@ -107,13 +101,13 @@ namespace json {
 
             switch (rhs.m_type) {
             case ARRAY:
-                m_u.ptr.a = new array_container(*rhs.m_u.ptr.a);
+                m_u.a = new array_container(*rhs.m_u.a);
                 break;
             case OBJECT:
-                m_u.ptr.o = new object_container(*rhs.m_u.ptr.o);
+                m_u.o = new object_container(*rhs.m_u.o);
                 break;
             case STRING:
-                m_u.ptr.s = new std::string(*rhs.m_u.ptr.s);
+                m_u.s = new std::string(*rhs.m_u.s);
                 break;
             case INTEGER:
             case DOUBLE:
@@ -136,7 +130,6 @@ namespace json {
         m_u = v.m_u;
 
         v.m_type = NIL;
-        v.m_u.ptr.p = nullptr;
     }
 
     value &value::operator=(value &&v) noexcept {
@@ -145,13 +138,13 @@ namespace json {
 
         switch (m_type) {
         case STRING:
-            delete m_u.ptr.s;
+            delete m_u.s;
             break;
         case OBJECT:
-            delete m_u.ptr.o;
+            delete m_u.o;
             break;
         case ARRAY:
-            delete m_u.ptr.a;
+            delete m_u.a;
             break;
         default:
             break;
@@ -161,7 +154,6 @@ namespace json {
         m_u = v.m_u;
 
         v.m_type = NIL;
-        v.m_u.ptr.p = nullptr;
 
         return *this;
     }
@@ -170,13 +162,13 @@ namespace json {
     value &value::operator=(double d) {
         switch (m_type) {
         case OBJECT:
-            delete m_u.ptr.o;
+            delete m_u.o;
             break;
         case ARRAY:
-            delete m_u.ptr.a;
+            delete m_u.a;
             break;
         case STRING:
-            delete m_u.ptr.s;
+            delete m_u.s;
             break;
         default:
             break;
@@ -189,13 +181,13 @@ namespace json {
     value &value::operator=(int i) {
         switch (m_type) {
         case OBJECT:
-            delete m_u.ptr.o;
+            delete m_u.o;
             break;
         case ARRAY:
-            delete m_u.ptr.a;
+            delete m_u.a;
             break;
         case STRING:
-            delete m_u.ptr.s;
+            delete m_u.s;
             break;
         default:
             break;
@@ -208,13 +200,13 @@ namespace json {
     value &value::operator=(bool b) {
         switch (m_type) {
         case OBJECT:
-            delete m_u.ptr.o;
+            delete m_u.o;
             break;
         case ARRAY:
-            delete m_u.ptr.a;
+            delete m_u.a;
             break;
         case STRING:
-            delete m_u.ptr.s;
+            delete m_u.s;
             break;
         default:
             break;
@@ -227,43 +219,43 @@ namespace json {
     value &value::operator=(const std::string &s) {
         switch (m_type) {
         case ARRAY:
-            delete m_u.ptr.a;
+            delete m_u.a;
             break;
         case OBJECT:
-            delete m_u.ptr.o;
+            delete m_u.o;
             break;
         default:
-            m_u.ptr.s = new std::string;
+            m_u.s = new std::string;
         case STRING:
             break;
         }
         m_type = STRING;
-        *m_u.ptr.s = s;
+        *m_u.s = s;
         return *this;
     }
 
     value &value::operator=(std::string&& s) {
         switch (m_type) {
         case ARRAY:
-            delete m_u.ptr.a;
+            delete m_u.a;
             break;
         case OBJECT:
-            delete m_u.ptr.o;
+            delete m_u.o;
             break;
         default:
-            m_u.ptr.s = new std::string;
+            m_u.s = new std::string;
         case STRING:
             break;
         }
         m_type = STRING;
-        *m_u.ptr.s = s;
+        *m_u.s = s;
         return *this;
     }
 
     const std::string &value::sval() const {
         static std::string empty;
         if (m_type == STRING)
-            return *m_u.ptr.s;
+            return *m_u.s;
         else if (use_exceptions)
             throw illegal_op();
         else
@@ -313,12 +305,12 @@ namespace json {
             os << std::boolalpha << m_u.b;
             break;
         case STRING:
-            os << '"' << *m_u.ptr.s << '"';
+            os << '"' << *m_u.s << '"';
             break;
         case ARRAY:
             os << '[';
-            for (auto i = m_u.ptr.a->begin(); i != m_u.ptr.a->end(); ++i) {
-                if (i != m_u.ptr.a->begin())
+            for (auto i = m_u.a->begin(); i != m_u.a->end(); ++i) {
+                if (i != m_u.a->begin())
                     os << ',';
                 os << i->str();
             }
@@ -326,8 +318,8 @@ namespace json {
             break;
         case OBJECT:
             os << '{';
-            for (auto i = m_u.ptr.o->begin(); i != m_u.ptr.o->end(); ++i) {
-                if (i != m_u.ptr.o->begin())
+            for (auto i = m_u.o->begin(); i != m_u.o->end(); ++i) {
+                if (i != m_u.o->begin())
                     os << ',';
                 os << '"' << i->first << '"' << ':' << i->second.str();
             }
@@ -342,14 +334,14 @@ namespace json {
 
     void value::push_back(const value &val) {
         if (m_type == ARRAY)
-            m_u.ptr.a->push_back(val);
+            m_u.a->push_back(val);
         else if (use_exceptions)
             throw illegal_op();
     }
 
     void value::push_back(value &&v) {
         if (m_type == ARRAY)
-            m_u.ptr.a->push_back(std::move(v));
+            m_u.a->push_back(std::move(v));
         else if (use_exceptions)
             throw illegal_op();
     }
@@ -357,18 +349,19 @@ namespace json {
     value &value::operator[](const std::string &key) {
         static value nil;
         if (m_type == OBJECT)
-            return (*m_u.ptr.o)[key];
+            return (*m_u.o)[key];
         else if (use_exceptions)
             throw illegal_op();
-        else
-            // FIXME What happens in val["some_key"]["some_key"] case?
+        else {
+            nil = value();
             return nil;
+        }
     }
 
     const value &value::operator[](const std::string &key) const {
         static const value nil;
         if (m_type == OBJECT)
-            return (*m_u.ptr.o)[key];
+            return (*m_u.o)[key];
         else if (use_exceptions)
             throw illegal_op();
         else
@@ -378,9 +371,9 @@ namespace json {
     value &value::operator[](size_t idx) {
         static value nil;
         if (m_type == ARRAY) {
-            if (idx < 0 || idx >= m_u.ptr.a->size())
+            if (idx < 0 || idx >= m_u.a->size())
                 throw out_of_bounds();
-            return (*m_u.ptr.a)[idx];
+            return (*m_u.a)[idx];
         } else if (use_exceptions) {
             throw illegal_op();
         } else {
@@ -392,9 +385,9 @@ namespace json {
     const value &value::operator[](size_t idx) const {
         static const value nil;
         if (m_type == ARRAY) {
-            if (idx < 0 || idx >= m_u.ptr.a->size())
+            if (idx < 0 || idx >= m_u.a->size())
                 throw out_of_bounds();
-            return (*m_u.ptr.a)[idx];
+            return (*m_u.a)[idx];
         } else if (use_exceptions) {
             throw illegal_op();
         } else {
@@ -403,12 +396,12 @@ namespace json {
     }
 
     bool value::operator==(const std::string &rhs) const {
-        return m_type == STRING && *m_u.ptr.s == rhs;
+        return m_type == STRING && *m_u.s == rhs;
     }
 
     value &value::erase(const std::string &key) {
         if (m_type == OBJECT)
-            m_u.ptr.o->erase(key);
+            m_u.o->erase(key);
         else if (use_exceptions)
             throw illegal_op();
         return *this;
@@ -416,13 +409,13 @@ namespace json {
 
     array::array() {
         this->m_type = ARRAY;
-        this->m_u.ptr.a = new array_container();
+        this->m_u.a = new array_container();
     }
 
     array::array(std::initializer_list<value> l) {
         this->m_type = ARRAY;
-        this->m_u.ptr.a = new array_container();
+        this->m_u.a = new array_container();
         for (auto i = l.begin(); i != l.end(); ++i)
-            this->m_u.ptr.a->push_back(*i);
+            this->m_u.a->push_back(*i);
     }
 }
