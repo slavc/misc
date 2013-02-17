@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cassert>
 
 #include "json.hpp"
 
@@ -78,7 +79,6 @@ static void test() {
 
     json::value obj2(json::parse(s));
 
-    std::cout << obj.str() << std::endl;
-    std::cout << obj2.str() << std::endl;
+    assert(obj.str() == obj2.str());
 }
 

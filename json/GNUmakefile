@@ -1,23 +1,26 @@
+#CXX=clang++
+#CC=clang
+CXX=g++
+CC=gcc
+
 CXXFLAGS+=-Wall
 CXXFLAGS+=-std=c++11
-#CXXFLAGS+=-g
+CXXFLAGS+=-g
 CXXFLAGS+=-O2
 #CXXFLAGS+=-pg
 
 CFLAGS+=-Wall
-#CFLAGS+=-g
+CFLAGS+=-g
+#CFLAGS+=-pg
 
 #LDFLAGS+=-pg
-#LDFLAGS+=-g
+LDFLAGS+=-g
 
 
 all: test
 
 test: parse.o test.o json.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
-
-js0n: js0n.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
 	rm -f *.o test js0n gmon.out
