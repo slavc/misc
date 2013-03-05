@@ -21,6 +21,8 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <utility>
+#include <type_traits>
 
 namespace json {
     enum types {
@@ -146,16 +148,19 @@ namespace json {
                 this->m_u.o = new object_container();
             }
 
-            template<typename ... Types> object(Types ... args) {
+            template<typename... Args>
+            object(Args&&... args) {
+                static_assert(sizeof...(args) % 2 == 0, "The number of arguments to the json::object constructor must be even!");
                 this->m_type = OBJECT;
                 this->m_u.o = new object_container();
-                vctor(args...);
+                vctor(std::forward<Args>(args)...);
             }
 
         private:
-            template<typename ... Types> void vctor(const std::string& key, const value& val, Types ... args) {
+            template<typename KeyT, typename ValT, typename... Args>
+            void vctor(KeyT&& key, ValT&& val, Args&&... args) {
                 (*this->m_u.o)[key] = val;
-                vctor(args...);
+                vctor(std::forward<Args>(args)...);
             }
 
             void vctor() {

@@ -1,20 +1,20 @@
-#CXX=clang++
-#CC=clang
-CXX=g++
-CC=gcc
+CXX=clang++
+CC=clang
+#CXX=g++
+#CC=gcc
 
 CXXFLAGS+=-Wall
 CXXFLAGS+=-std=c++11
-CXXFLAGS+=-g
+#CXXFLAGS+=-g
 CXXFLAGS+=-O2
 #CXXFLAGS+=-pg
 
 CFLAGS+=-Wall
-CFLAGS+=-g
+#CFLAGS+=-g
 #CFLAGS+=-pg
 
 #LDFLAGS+=-pg
-LDFLAGS+=-g
+#LDFLAGS+=-g
 
 
 all: test
@@ -28,7 +28,7 @@ clean:
 remake: clean all
 
 gprof: test
-	./test auctions.json
+	./test big.json
 	gprof test gmon.out >> gprof.out
 	less gprof.out
 	
