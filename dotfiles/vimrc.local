@@ -83,3 +83,4 @@ set vb t_vb=
 set wildchar=<Tab> wildmenu wildmode=full
 set wildcharm=<C-Z>
 syntax on
+set mouse=a

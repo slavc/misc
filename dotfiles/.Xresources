@@ -1,15 +1,52 @@
 XTerm*foreground: PaleGreen2
 XTerm*background: black
 XTerm*scrollBar: false
-XTerm*saveLines: 512
-XTerm*fastScroll: true
-XTerm*font: -xos4-terminus-medium-r-normal--16-160-72-72-c-80-iso10646-1
-XTerm*boldFont: -xos4-terminus-bold-r-normal--16-160-72-72-c-80-iso10646-1
+XTerm*saveLines: 2048
+XTerm*font: -*-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+XTerm*boldFont: -*-terminus-bold-r-normal--20-*-*-*-*-*-iso10646-1
+
+!URxvt*foreground: PaleGreen2
+!URxvt*background: black
+!URxvt*scrollBar: false
+!URxvt*color4: SkyBlue4
+!URxvt*color12: SkyBlue2
 
 Xft.dpi:        96
 Xft.antialias:  true
 Xft.rgba:       rgb
 Xft.hinting:    true
-Xft.hintstyle:  hintslight
+Xft.hintstyle:  hintfull
 
 XLock.mode: blank
+
+URxvt.font: -*-terminus-medium-r-normal--16-*-*-*-*-*-iso10646-1
+URxvt.boldFont: -*-terminus-bold-r-normal--16-*-*-*-*-*-iso10646-1
+URxvt.scrollBar: false
+
+!!black
+URxvt.color0:  #000000
+URxvt.color8:  #2B2B2B
+!!red
+URxvt.color1:  #A5372E
+URxvt.color9:  #E06C5C 
+!!green
+URxvt.color2:  #4A663C 
+URxvt.color10: #7B996C
+!!yellow
+URxvt.color3:  #7C5618
+URxvt.color11: #B38849
+!!blue
+URxvt.color4:  #566060
+URxvt.color12: #889393
+!!magenta
+URxvt.color5:  #8E4948
+URxvt.color13: #C67C78
+!!cyan
+URxvt.color6:  #6D5B42
+URxvt.color14: #A28D73
+!!white
+URxvt.color7:  #8D8D8D
+URxvt.color15: #C6C6C6
+!
+URxvt.background: #111111 
+URxvt.foreground: 15
