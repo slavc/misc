@@ -42,6 +42,7 @@ yum -y install \
     gtk2-devel \
     gtk3-devel \
     gtk3-devel-docs \
+    gnome-tweak-tool \
     inkscape \
     libX11-devel \
     libXft-devel \
@@ -99,6 +100,9 @@ for f in gvimrc vimrc.local; do
 done
 echo -e '\n\n\n\nsource /etc/vimrc.local' >> /etc/vimrc
 
+for f in .Xmodmap .Xresources .cwmrc ._dircolors .xsession; do
+	curl -s -o $HOME/$f "https://raw.github.com/S010/misc/master/dotfiles/$f";
+done;' || error 'failed to perform user setup'
 
 su $username -c 'svn co https://core.fluendo.com/gstreamer/svn/trunk/ ~/src/fluendo
 cd $HOME/src/fluendo/gst-fluendo-mp3;
@@ -108,10 +112,6 @@ make;
 dstdir=$HOME/.gstreamer-0.10/plugins;
 mkdir -p "$dstdir";
 cp src/.libs/libgstflump3dec.so "$dstdir";
-
-for f in .Xmodmap .Xresources .cwmrc ._dircolors .xsession; do
-	curl -s -o $HOME/$f "https://raw.github.com/S010/misc/master/dotfiles/$f";
-done;' || error 'failed to perform user setup'
 
 exit 0
 
