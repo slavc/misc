@@ -33,8 +33,7 @@
  *
  *
  * Compilation:
- *	cc -o xsetbg xsetbg.c \
- *	    $(pkg-config --cflags --libs x11 xinerama imlib2)
+ *   cc -o xsetbg xsetbg.c $(pkg-config --cflags --libs x11 xinerama imlib2)
  */
 
 #include <stdarg.h>
