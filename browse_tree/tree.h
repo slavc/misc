@@ -35,6 +35,7 @@ enum TreeNodeFlags {
 
 struct _TreeNode {
 	char			*data;
+	char			*descr;
 	struct _TreeNode	*parent;
 	struct _TreeNode	*children;
 	size_t			 nchildren;

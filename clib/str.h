@@ -14,27 +14,17 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef FILE_H
-#define FILE_H
-
-#include <stdio.h>
+#ifndef STR_H
+#define STR_H
 
 /**
- * Load a file into memory.
+ * Prepend `s' with a string formatted from `fmt' and va_args.
  *
- * @param fd file descriptor.
+ * @parameter s pointer to a dynamically allocated string or NULL.
+ * @parameter fmt format for the va arguments.
  *
- * @return malloc()ed buffer with file's content.
+ * @return pointer to reallocated `s'.
  */
-char    *f_load(int fd);
-
-/**
- * Read a line from file.
- *
- * @param fp file to read from.
- *
- * @return dynamically allocated buffer with the line or NULL if EOF. Newline character is retained.
- */
-char	*fp_gets(FILE *fp);
+char	*str_prepend(char *s, const char *fmt, ...);
 
 #endif

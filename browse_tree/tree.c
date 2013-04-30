@@ -156,6 +156,7 @@ tree_free(TreeNode *node)
 	for (i = 0; i < node->nchildren; ++i)
 		tree_free(node->children + i);
 	free(node->data);
+	free(node->descr);
 	free(node->children);
 }
 
@@ -276,7 +277,7 @@ tree_get_iter(GtkTreeModel *model, GtkTreeIter *iter, GtkTreePath *path)
 static GtkTreePath *
 tree_get_path(GtkTreeModel *model, GtkTreeIter *iter)
 {
-	TreeNode		*t, *children;
+	TreeNode	*t, *children;
 	size_t		 i, nchildren;
 	GtkTreePath	*path;
 

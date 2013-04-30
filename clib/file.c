@@ -17,6 +17,8 @@
 #include <err.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "xmem.h"
 
@@ -48,11 +50,42 @@ f_load(int fd)
 	return buf;
 }
 
-#ifdef TEST_FILE
+char *
+fp_gets(FILE *fp)
+{
+	/* FIXME
+	 * Examine popular libc implementations to determine 
+	 * the optimal value for chunksize.
+	 */
+	const size_t	 chunksize = 512;
+	char		*buf = NULL;
+	size_t		 bufsize;
+	size_t		 i;
+
+	i = bufsize = 0;
+	for ( ;; ) {
+		bufsize += chunksize;
+		buf = xrealloc(buf, bufsize);
+		if (fgets(buf + i, bufsize - i, fp) == NULL) {
+			if (i == 0) {
+				xfree(buf);
+				return NULL;
+			} else {
+				buf = xrealloc(buf, strlen(buf) + 1);
+				return buf;
+			}
+		}
+		if (strchr(buf + i, '\n') != NULL)
+			return buf;
+		i = bufsize - 1;
+	}
+}
+
+#ifdef TEST_F_LOAD
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 
+#include <fcntl.h>
 #include <stdio.h>
 
 int
@@ -75,4 +108,31 @@ main(int argc, char **argv)
 
         return 0;
 }
-#endif /* TEST_LOADFILE */
+#endif
+
+#ifdef TEST_FP_GETS
+#include <stdio.h>
+#include <string.h>
+
+int
+main(int argc, char **argv)
+{
+	FILE	*fp;
+	char	*buf;
+
+	while (++argv, --argc) {
+		fp = fopen(*argv, "r");
+		if (fp == NULL) {
+			warn("%s", *argv);
+			continue;
+		}
+		while ((buf = fp_gets(fp)) != NULL) {
+			printf("%s", buf);
+			xfree(buf);
+		}
+		fclose(fp);
+	}
+
+        return 0;
+}
+#endif

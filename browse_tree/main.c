@@ -1,5 +1,6 @@
 #include <sys/types.h>
 
+#include <assert.h>
 #include <ctype.h>
 #include <err.h>
 #include <errno.h>
@@ -13,6 +14,8 @@
 
 #include "tree.h"
 #include "xmem.h"
+#include "str.h"
+#include "file.h"
 
 #define DELIM		"."
 #define MAX_LINE	8192
@@ -27,6 +30,8 @@ static void		 cb_entry_changed(GtkWidget *widget, gpointer user_data);
 static gboolean		 cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data);
 static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
 static GtkTreeModel	*parse(const char *filename);
+static char		*decode_descr(char *s);
+static void		 update_path_entry(GtkEntry *entry, GtkTreeModel *model, GtkTreePath *path);
 
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
@@ -34,6 +39,9 @@ static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_visibility(TreeNode *node, const char *pattern);
 
 static char		*filter_pattern;
+
+GtkWidget	*path_entry;
+GtkWidget	*descr_view;
 
 int
 main(int argc, char **argv)
@@ -105,20 +113,18 @@ create_right_pane(void)
 {
 	GtkWidget	*box;
 	GtkWidget	*lblpath;
-	GtkWidget	*path;
 	GtkWidget	*lbldescr;
-	GtkWidget	*descr;
 
-	box      = gtk_vbox_new(FALSE, 0);
-	lblpath  = gtk_label_new("Path");
-	path     = gtk_entry_new();
-	lbldescr = gtk_label_new("Description");
-	descr    = gtk_text_view_new();
+	box        = gtk_vbox_new(FALSE, 0);
+	lblpath    = gtk_label_new("Path");
+	path_entry = gtk_entry_new();
+	lbldescr   = gtk_label_new("Description");
+	descr_view = gtk_text_view_new();
 
-	gtk_box_pack_start(GTK_BOX(box), lblpath,  FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), path,     FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), lbldescr, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), descr,    TRUE,  TRUE,  0);
+	gtk_box_pack_start(GTK_BOX(box), lblpath,    FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box), path_entry, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box), lbldescr,   FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box), descr_view, TRUE,  TRUE,  0);
 
 	return box;
 }
@@ -166,8 +172,65 @@ create_view_and_model(const char *filename)
 }
 
 static void
+print_path(GtkTreePath *path)
+{
+}
+
+static void
 cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data)
 {
+	GList			*list;
+	GList			*first;
+	GtkTreePath		*path;
+	GtkTreeModelFilter	*filter_model;
+	GtkTreeModel		*model;
+	GtkTreeIter		 iter;
+	GtkTextBuffer		*tbuf;
+	TreeNode		*node;
+
+	list = gtk_tree_selection_get_selected_rows(sel, &filter_model);
+	if (list == NULL) {
+		gtk_entry_set_text(path_entry, "");
+		return;
+	}
+	model = gtk_tree_model_filter_get_model(filter_model);
+	first = g_list_first(list);
+	path = first->data;
+	assert(path != NULL);
+	update_path_entry(GTK_ENTRY(path_entry), model, path);
+	if (gtk_tree_model_get_iter(model, &iter, path)) {
+		node = iter.user_data;
+		tbuf = gtk_text_view_get_buffer(descr_view);
+		if (node->descr == NULL) {
+			gtk_text_buffer_set_text(tbuf, "", -1);
+		} else {
+			gtk_text_buffer_set_text(tbuf, node->descr, -1);
+		}
+	}
+	g_list_foreach(list, (GFunc) gtk_tree_path_free, NULL);
+	g_list_free(list);
+}
+
+static void
+update_path_entry(GtkEntry *entry, GtkTreeModel *model, GtkTreePath *path)
+{
+	char		*s = NULL;
+	GtkTreeIter	 iter;
+	int		 i;
+	TreeNode	*node;
+
+	if (!gtk_tree_model_get_iter(model, &iter, path)) {
+		gtk_entry_set_text(entry, "");
+		return;
+	}
+	for (i = 0, node = iter.user_data; node != NULL && node->data != NULL; ++i, node = node->parent) {
+		if (i == 0)
+			s = xstrdup(node->data);
+		else
+			s = str_prepend(s, "%s.", node->data);
+	}
+	gtk_entry_set_text(entry, s);
+	xfree(s);
 }
 
 static void
@@ -200,8 +263,9 @@ static GtkTreeModel *
 parse(const char *filename)
 {
 	FILE		*fp;
-	char		 buf[MAX_LINE];
-	const size_t	 bufsize = sizeof buf;
+	char		*buf;
+	char		*path;
+	char		*descr;
 	char		*tok;
         Tree		*tree;
 	TreeNode	*parent, *child;
@@ -212,17 +276,26 @@ parse(const char *filename)
 		err(1, "%s", filename);
 
         tree = tree_new();
-	while (fgets(buf, bufsize, fp) != NULL) {
+	while ((buf = fp_gets(fp)) != NULL) {
 		chop_space(buf);
 		if (*buf == '\0') /* skip empty lines */
 			continue;
+		path = buf;
+		descr = strchr(buf, ' ');
+		if (descr != NULL)
+			*descr++ = '\0';
 		parent = tree->root;
-		tok = strtok(buf, DELIM);
+		tok = strtok(path, DELIM);
 		while (tok != NULL) {
 			child = tree_vivify_child(parent, tok);
 			parent = child;
 			tok = strtok(NULL, DELIM);
 		}
+		if (descr != NULL)
+			child->descr = decode_descr(descr);
+		else
+			child->descr = NULL;
+		free(buf);
 	}
 	fclose(fp);
 	tree_set_parents(tree->root);
@@ -231,6 +304,42 @@ parse(const char *filename)
 	gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(filter), cb_is_visible, tree, NULL);
 
 	return (GtkTreeModel *) filter;
+}
+
+static inline char
+esc2char(char c)
+{
+	switch (c) {
+	case 'n':
+		return '\n';
+	case 'r':
+		return '\r';
+	default:
+		return c;
+	}
+}
+
+static char *
+decode_descr(char *s)
+{
+	char	*buf;
+	char	*p, *q;
+	size_t	 slen;
+
+	slen = strlen(s);
+	buf = xmalloc(slen + 1);
+
+	s[slen - 1] = '\0'; // remove the last quote
+	for (p = s + 1, q = buf; *p != '\0'; ++p, ++q) {
+		if (*p == '\\') {
+			++p;
+			*q = esc2char(*p);
+		} else {
+			*q = *p;
+		}
+	}
+
+	return buf;
 }
 
 static void

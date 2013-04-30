@@ -1,4 +1,4 @@
-abi.vsyscall32
+abi.vsyscall32 "This is\nan example\ndescription."
 crypto.fips_enabled
 debug.exception-trace
 debug.kprobes-optimization
