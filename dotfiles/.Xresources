@@ -4,6 +4,7 @@ XTerm*scrollBar: false
 XTerm*saveLines: 2048
 XTerm*font: -*-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
 XTerm*boldFont: -*-terminus-bold-r-normal--20-*-*-*-*-*-iso10646-1
+XTerm*charClass: 33:48,37:48,45-47:48,38:48,58:48
 
 !URxvt*foreground: PaleGreen2
 !URxvt*background: black
@@ -19,8 +20,8 @@ Xft.hintstyle:  hintfull
 
 XLock.mode: blank
 
-URxvt.font: -*-terminus-medium-r-normal--16-*-*-*-*-*-iso10646-1
-URxvt.boldFont: -*-terminus-bold-r-normal--16-*-*-*-*-*-iso10646-1
+URxvt.font: -*-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+URxvt.boldFont: -*-terminus-bold-r-normal--20-*-*-*-*-*-iso10646-1
 URxvt.scrollBar: false
 
 !!black
