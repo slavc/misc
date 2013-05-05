@@ -19,6 +19,10 @@ op_file() {
         firefox "$path" > /dev/null 2>&1 &
         disown
         ;;
+    odt)
+        ooffice "$path" > /dev/null 2>&1 &
+        disown
+        ;;
     *)
         echo "$path: don't know how to open a $type file" 1>&2
         return 1
