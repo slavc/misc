@@ -20,8 +20,10 @@ Xft.hintstyle:  hintfull
 
 XLock.mode: blank
 
-URxvt.font: -*-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
-URxvt.boldFont: -*-terminus-bold-r-normal--20-*-*-*-*-*-iso10646-1
+!URxvt.font: -*-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+!URxvt.boldFont: -*-terminus-bold-r-normal--20-*-*-*-*-*-iso10646-1
+URxvt.font: -*-terminus-medium-*-*-*-16-*-*-*-*-*-iso10646-1
+URxvt.boldFont: -*-terminus-bold-*-*-*-16-*-*-*-*-*-iso10646-1
 URxvt.scrollBar: false
 
 !!black
