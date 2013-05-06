@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 #include "tree.h"
 #include "xmem.h"
@@ -29,9 +30,11 @@ static void		 cb_save_clicked(GtkWidget *widget, gpointer user_data);
 static void		 cb_entry_changed(GtkWidget *widget, gpointer user_data);
 static gboolean		 cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data);
 static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
+static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
 static GtkTreeModel	*parse(const char *filename);
 static char		*decode_descr(char *s);
-static void		 update_path_entry(GtkEntry *entry, GtkTreeModel *model, GtkTreePath *path);
+static void		 update_path(TreeNode *node);
+static void		 update_description(TreeNode *node);
 
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
@@ -40,6 +43,7 @@ static void		 update_visibility(TreeNode *node, const char *pattern);
 
 static char		*filter_pattern;
 
+GtkWidget	*tree_view;
 GtkWidget	*path_entry;
 GtkWidget	*descr_view;
 
@@ -81,27 +85,26 @@ create_left_pane(const char *filename)
 	GtkWidget	*box;
 	GtkWidget	*entry;
 	GtkWidget	*swin;
-	GtkWidget	*view;
 	GtkWidget	*bbox;
 	GtkWidget	*expand;
 	GtkWidget	*collapse;
 
-	box      = gtk_vbox_new(FALSE, FALSE);
-	entry    = gtk_entry_new();
-	swin     = gtk_scrolled_window_new(NULL, NULL);
-	view     = create_view_and_model(filename);
-	bbox     = gtk_hbutton_box_new();
-	expand   = gtk_button_new_with_label("Expand");
-	collapse = gtk_button_new_with_label("Collapse");
+	box       = gtk_vbox_new(FALSE, FALSE);
+	entry     = gtk_entry_new();
+	swin      = gtk_scrolled_window_new(NULL, NULL);
+	tree_view = create_view_and_model(filename);
+	bbox      = gtk_hbutton_box_new();
+	expand    = gtk_button_new_with_label("Expand");
+	collapse  = gtk_button_new_with_label("Collapse");
 
 	gtk_box_pack_start(GTK_BOX(box), entry, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(box), swin,   TRUE,  TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(box), bbox,  FALSE, FALSE, 0);
-	gtk_container_add(GTK_CONTAINER(swin), view);
+	gtk_container_add(GTK_CONTAINER(swin), tree_view);
 	gtk_container_add(GTK_CONTAINER(bbox), expand);
 	gtk_container_add(GTK_CONTAINER(bbox), collapse);
 
-	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),    view);
+	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),    tree_view);
 	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),   NULL);
 	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked), NULL);
 
@@ -126,7 +129,71 @@ create_right_pane(void)
 	gtk_box_pack_start(GTK_BOX(box), lbldescr,   FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(box), descr_view, TRUE,  TRUE,  0);
 
+	g_signal_connect(descr_view, "focus-out-event", G_CALLBACK(cb_descr_view_focus_out), NULL);
+
 	return box;
+}
+
+static TreeNode *
+get_first_selected_node(void)
+{
+	GtkTreeModel		*modelf;
+	GtkTreeModel		*model;
+	GtkTreeSelection	*sel;
+	GList			*list;
+	GList			*first;
+	GtkTreePath		*path;
+	GtkTreeIter		 iter;
+	TreeNode		*node;
+
+	char			*tmp;
+
+	modelf = gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view));
+	model = gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(modelf));
+	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+	list = gtk_tree_selection_get_selected_rows(sel, NULL);
+	if (list == NULL)
+		return NULL;
+	first = g_list_first(list);
+	path = first->data;
+
+	tmp = gtk_tree_path_to_string(path);
+	g_print("%s(): %s\n", __func__, tmp);
+	g_free(tmp);
+
+	if (tree_get_iter_visible(model, &iter, path))
+		node = iter.user_data;
+	else
+		node = NULL;
+	g_list_foreach(list, (GFunc) gtk_tree_path_free, NULL);
+	g_list_free(list);
+	return node;
+}
+
+static gboolean
+cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data)
+{
+	GtkTextBuffer	*buf;
+	gchar		*tmp;
+	TreeNode	*node;
+	GtkTextIter	 start;
+	GtkTextIter	 end;
+
+	node = get_first_selected_node();
+	if (node == NULL)
+		goto out;
+	buf = gtk_text_view_get_buffer(descr_view);
+	gtk_text_buffer_get_start_iter(buf, &start);
+	gtk_text_buffer_get_end_iter(buf, &end);
+	tmp = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
+	xfree(node->descr);
+	if (*tmp == '\0' || str_is_space(tmp))
+		node->descr = NULL;
+	else
+		node->descr = xstrdup(tmp);
+	g_free(tmp);
+out:
+	return FALSE;
 }
 
 static void
@@ -172,65 +239,45 @@ create_view_and_model(const char *filename)
 }
 
 static void
-print_path(GtkTreePath *path)
-{
-}
-
-static void
 cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data)
 {
-	GList			*list;
-	GList			*first;
-	GtkTreePath		*path;
-	GtkTreeModelFilter	*filter_model;
-	GtkTreeModel		*model;
-	GtkTreeIter		 iter;
-	GtkTextBuffer		*tbuf;
-	TreeNode		*node;
+	TreeNode	*node;
 
-	list = gtk_tree_selection_get_selected_rows(sel, &filter_model);
-	if (list == NULL) {
-		gtk_entry_set_text(path_entry, "");
+	g_print("%s()\n", __func__);
+
+	node = get_first_selected_node();
+	if (node == NULL)
 		return;
-	}
-	model = gtk_tree_model_filter_get_model(filter_model);
-	first = g_list_first(list);
-	path = first->data;
-	assert(path != NULL);
-	update_path_entry(GTK_ENTRY(path_entry), model, path);
-	if (gtk_tree_model_get_iter(model, &iter, path)) {
-		node = iter.user_data;
-		tbuf = gtk_text_view_get_buffer(descr_view);
-		if (node->descr == NULL) {
-			gtk_text_buffer_set_text(tbuf, "", -1);
-		} else {
-			gtk_text_buffer_set_text(tbuf, node->descr, -1);
-		}
-	}
-	g_list_foreach(list, (GFunc) gtk_tree_path_free, NULL);
-	g_list_free(list);
+	update_path(node);
+	update_description(node);
 }
 
 static void
-update_path_entry(GtkEntry *entry, GtkTreeModel *model, GtkTreePath *path)
+update_path(TreeNode *node)
 {
-	char		*s = NULL;
-	GtkTreeIter	 iter;
-	int		 i;
-	TreeNode	*node;
+	int	 i;
+	char	*s = NULL;
 
-	if (!gtk_tree_model_get_iter(model, &iter, path)) {
-		gtk_entry_set_text(entry, "");
-		return;
-	}
-	for (i = 0, node = iter.user_data; node != NULL && node->data != NULL; ++i, node = node->parent) {
+	for (i = 0; node != NULL && node->parent != NULL; ++i, node = node->parent) {
 		if (i == 0)
 			s = xstrdup(node->data);
 		else
 			s = str_prepend(s, "%s.", node->data);
 	}
-	gtk_entry_set_text(entry, s);
+	gtk_entry_set_text(GTK_ENTRY(path_entry), s);
 	xfree(s);
+}
+
+static void
+update_description(TreeNode *node)
+{
+	GtkTextBuffer	*tbuf;
+
+	tbuf = gtk_text_view_get_buffer(descr_view);
+	if (node->descr == NULL)
+		gtk_text_buffer_set_text(tbuf, "", -1);
+	else
+		gtk_text_buffer_set_text(tbuf, node->descr, -1);
 }
 
 static void
@@ -387,10 +434,10 @@ cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 	TreeNode	*node;
 
 	node = iter->user_data;
-	if (node->flags & TREE_NODE_VISIBLE)
-		return TRUE;
-	else
+	if (node == NULL || !(node->flags & TREE_NODE_VISIBLE))
 		return FALSE;
+	else
+		return TRUE;
 }
 
 static void

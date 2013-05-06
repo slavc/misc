@@ -243,26 +243,24 @@ tree_get_column_type(GtkTreeModel *model, gint index)
 static gboolean
 tree_get_iter(GtkTreeModel *model, GtkTreeIter *iter, GtkTreePath *path)
 {
-	TreeNode	*t;
-	gint		*indices, depth;
-
+	TreeNode	*node;
+	gint		 depth;
+	gint		*idx;
 
 	g_assert(IS_TREE(model));
 	g_assert(path != NULL);
+	g_assert(iter != NULL);
 
-	t = TREE(model)->root;
-
-	indices = gtk_tree_path_get_indices(path);
+	node = TREE(model)->root;
+	idx = gtk_tree_path_get_indices(path);
 	depth = gtk_tree_path_get_depth(path);
-
-	while (depth-- > 0) {
-		if (*indices >= t->nchildren)
+	while (depth--) {
+		if (*idx >= node->nchildren)
 			return FALSE;
-		t = t->children + *indices++;
+		node = node->children + *idx++;
 	}
-
 	iter->stamp = TREE(model)->stamp;
-	iter->user_data = t;
+	iter->user_data = node;
 	return TRUE;
 }
 
@@ -574,3 +572,35 @@ tree_print(TreeNode *node, size_t depth)
 		tree_print(node->children + i, depth + 1);
 }
 
+gboolean
+tree_get_iter_visible(GtkTreeModel *model, GtkTreeIter *iter, GtkTreePath *path)
+{
+	TreeNode	*node;
+	gint		 depth;
+	gint		*idx;
+	gint		 i;
+	gint		 j;
+	gint		 n;
+
+	g_assert(IS_TREE(model));
+	g_assert(path != NULL);
+	g_assert(iter != NULL);
+
+	node = TREE(model)->root;
+	idx = gtk_tree_path_get_indices(path);
+	depth = gtk_tree_path_get_depth(path);
+	while (depth--) {
+		n = node->nchildren;
+		for (i = 0, j = *idx++; i < n; ++i) {
+			if ((node->children[i].flags & TREE_NODE_VISIBLE) && j-- == 0) {
+				node = node->children + i;
+				break;
+			}
+		}
+		if (i >= n)
+			return FALSE;
+	}
+	iter->stamp = TREE(model)->stamp;
+	iter->user_data = node;
+	return TRUE;
+}

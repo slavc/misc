@@ -27,4 +27,9 @@
  */
 char	*str_prepend(char *s, const char *fmt, ...);
 
+/**
+ * Return non-zero if string only consists of isspace(3) chars.
+ */
+int	 str_is_space(const char *s);
+
 #endif

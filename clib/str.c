@@ -14,6 +14,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <ctype.h>
 #include <err.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -60,6 +61,17 @@ str_prepend(char *s, const char *fmt, ...)
 	xfree(buf);
 
 	return s;
+}
+
+int
+str_is_space(const char *s)
+{
+	while (isspace(*s))
+		++s;
+	if (*s == '\0')
+		return 1;
+	else
+		return 0;
 }
 
 #ifdef TEST_STR

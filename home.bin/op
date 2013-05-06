@@ -2,7 +2,7 @@
 
 # Open file(s) in the appropriate program.
 
-op_file() {
+function op_file() {
     type="$1"
     path="$2"
 
@@ -32,7 +32,7 @@ op_file() {
 
 while [ $# -gt 0 ]; do
     path="$1"
-    type="${1##*.}"
+    type=`echo "${1##*.}" | tr '[A-Z]' '[a-z]'`
     op_file "$type" "$path"
     shift
 done
