@@ -9,7 +9,7 @@ case "$TERM" in
 *rxvt*|*xterm*)
     PROMPT_COMMAND='echo -ne "\e]0;'
     if [ `id -u` -eq 0 ]; then
-        PROMPT_COMMAND="${PROMPT_COMMAND}\#"
+        PROMPT_COMMAND="${PROMPT_COMMAND}#"
     else
         PROMPT_COMMAND="${PROMPT_COMMAND}\$"
     fi

@@ -22,6 +22,7 @@
 #define MAX_LINE	8192
 
 /*
+ * "Model" -- the tree, "view" -- the graphical widgets which represent information.
  * load_*() functions  -- update the view with values from the model.
  * get_*() functions   -- retrieve the current value from the view.
  * store_*() functions -- update the model with current value from the view.
@@ -109,7 +110,7 @@ create_left_pane(const char *filename)
 	collapse  = gtk_button_new_with_label("Collapse");
 
 	gtk_box_pack_start(GTK_BOX(box), entry, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), swin,   TRUE,  TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(box), swin,  TRUE,  TRUE,  0);
 	gtk_box_pack_start(GTK_BOX(box), bbox,  FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(swin), tree_view);
 	gtk_container_add(GTK_CONTAINER(bbox), expand);
@@ -192,11 +193,11 @@ load_descr(void)
 {
 	GtkTextBuffer	*tbuf;
 
+	tbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(descr_view));
 	if (current_node == NULL || current_node->descr == NULL) {
 		gtk_text_buffer_set_text(tbuf, "", -1);
 		return;
 	}
-	tbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(descr_view));
 	gtk_text_buffer_set_text(tbuf, current_node->descr, -1);
 }
 
