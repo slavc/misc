@@ -21,6 +21,12 @@
 #define DELIM		"."
 #define MAX_LINE	8192
 
+/*
+ * load_*() functions  -- update the view with values from the model.
+ * get_*() functions   -- retrieve the current value from the view.
+ * store_*() functions -- update the model with current value from the view.
+ */
+
 static GtkWidget	*create_left_pane(const char *filename);
 static GtkWidget	*create_right_pane(void);
 static void		 cb_expand_clicked(GtkWidget *widget, gpointer data);
@@ -33,8 +39,11 @@ static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpoint
 static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
 static GtkTreeModel	*parse(const char *filename);
 static char		*decode_descr(char *s);
-static void		 update_path(TreeNode *node);
-static void		 update_description(TreeNode *node);
+static void		 load_descr(void);
+static char		*get_descr(void);
+static void		 store_descr(void);
+static void		 load_path(void);
+
 
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
@@ -46,6 +55,8 @@ static char		*filter_pattern;
 GtkWidget	*tree_view;
 GtkWidget	*path_entry;
 GtkWidget	*descr_view;
+
+TreeNode	*current_node;
 
 int
 main(int argc, char **argv)
@@ -158,7 +169,6 @@ get_first_selected_node(void)
 	path = first->data;
 
 	tmp = gtk_tree_path_to_string(path);
-	g_print("%s(): %s\n", __func__, tmp);
 	g_free(tmp);
 
 	if (tree_get_iter_visible(model, &iter, path))
@@ -173,27 +183,48 @@ get_first_selected_node(void)
 static gboolean
 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data)
 {
+	store_descr();
+	return FALSE;
+}
+
+static void
+load_descr(void)
+{
+	GtkTextBuffer	*tbuf;
+
+	if (current_node == NULL || current_node->descr == NULL) {
+		gtk_text_buffer_set_text(tbuf, "", -1);
+		return;
+	}
+	tbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(descr_view));
+	gtk_text_buffer_set_text(tbuf, current_node->descr, -1);
+}
+
+static char *
+get_descr(void)
+{
 	GtkTextBuffer	*buf;
 	gchar		*tmp;
-	TreeNode	*node;
 	GtkTextIter	 start;
 	GtkTextIter	 end;
 
-	node = get_first_selected_node();
-	if (node == NULL)
-		goto out;
-	buf = gtk_text_view_get_buffer(descr_view);
+	buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(descr_view));
 	gtk_text_buffer_get_start_iter(buf, &start);
 	gtk_text_buffer_get_end_iter(buf, &end);
 	tmp = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
-	xfree(node->descr);
-	if (*tmp == '\0' || str_is_space(tmp))
-		node->descr = NULL;
-	else
-		node->descr = xstrdup(tmp);
-	g_free(tmp);
-out:
-	return FALSE;
+	return tmp;
+}
+
+static void
+store_descr(void)
+{
+	char	*descr;
+
+	if (current_node == NULL)
+		return;
+	descr = get_descr();
+	xfree(current_node->descr);
+	current_node->descr = descr;
 }
 
 static void
@@ -241,22 +272,23 @@ create_view_and_model(const char *filename)
 static void
 cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data)
 {
-	TreeNode	*node;
-
-	g_print("%s()\n", __func__);
-
-	node = get_first_selected_node();
-	if (node == NULL)
-		return;
-	update_path(node);
-	update_description(node);
+	store_descr();
+	current_node = get_first_selected_node();
+	load_descr();
+	load_path();
 }
 
 static void
-update_path(TreeNode *node)
+load_path(void)
 {
-	int	 i;
-	char	*s = NULL;
+	TreeNode	*node = current_node;
+	int		 i;
+	char		*s = NULL;
+
+	if (current_node == NULL) {
+		gtk_entry_set_text(GTK_ENTRY(path_entry), "");
+		return;
+	}
 
 	for (i = 0; node != NULL && node->parent != NULL; ++i, node = node->parent) {
 		if (i == 0)
@@ -266,18 +298,6 @@ update_path(TreeNode *node)
 	}
 	gtk_entry_set_text(GTK_ENTRY(path_entry), s);
 	xfree(s);
-}
-
-static void
-update_description(TreeNode *node)
-{
-	GtkTextBuffer	*tbuf;
-
-	tbuf = gtk_text_view_get_buffer(descr_view);
-	if (node->descr == NULL)
-		gtk_text_buffer_set_text(tbuf, "", -1);
-	else
-		gtk_text_buffer_set_text(tbuf, node->descr, -1);
 }
 
 static void
