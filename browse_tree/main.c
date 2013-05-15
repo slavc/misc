@@ -59,6 +59,32 @@ GtkWidget	*descr_view;
 
 TreeNode	*current_node;
 
+static struct {
+    GtkWidget *p;
+    struct {
+        GtkWidget *p;
+        struct {
+            GtkWidget *p;
+            struct {
+                GtkWidget *p;
+                GtkWidget *search_entry;
+                struct {
+                    GtkWidget   *p;
+                    GtkTreeView *tree;
+                } scroll_win;
+                struct {
+                    GtkWidget *p;
+                    GtkWidget *expand_btn;
+                    GtkWidget *collapse_btn;
+                } btn_box;
+            } vbox;
+        } left;
+        struct {
+            GtkWidget *p;
+        } right;
+    } paned;
+} window;
+
 int
 main(int argc, char **argv)
 {
@@ -119,6 +145,8 @@ create_left_pane(const char *filename)
 	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),    tree_view);
 	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),   NULL);
 	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked), NULL);
+
+	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, GTK_STOCK_FIND);
 
 	return box;
 }
@@ -470,3 +498,16 @@ chop_space(char *s)
 		*p++ = '\0';
 }
 
+
+static GtkWidget *
+create_toolbar(void)
+{
+	GtkWidget	*toolbar;
+
+	toolbar = gtk_toolbar_new();
+
+	gtk_toolbar_set_orientation (GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
+	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+	gtk_toolbar_set_tooltips(GTK_TOOLBAR(toolbar), TRUE);
+	/* TODO */
+}

@@ -1,0 +1,6 @@
+* Save descriptions back to the file.
+* Status bar which shows what the program is doing.
+* Ability to search by descriptions too.
+* Ability to quickly filter only nodes which have descriptions.
+* Execute GUI in a separate thread, so that it always remains responsive.
+* Add ability to enter rich-text descriptions, including linking to other counters.
