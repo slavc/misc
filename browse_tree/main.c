@@ -23,7 +23,7 @@
 
 /*
  * "Model" -- the tree, "view" -- the graphical widgets which represent information.
- * load_*() functions  -- update the view with values from the model.
+ * display_*() functions  -- update the view with values from the model.
  * get_*() functions   -- retrieve the current value from the view.
  * store_*() functions -- update the model with current value from the view.
  */
@@ -40,17 +40,19 @@ static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpoint
 static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
 static GtkTreeModel	*parse(const char *filename);
 static char		*decode_descr(char *s);
-static void		 load_descr(void);
+static void		 display_descr(void);
 static char		*get_descr(void);
 static void		 store_descr(void);
-static void		 load_path(void);
-
+static void		 display_path(void);
+static GtkWidget	*create_toolbar(void);
+static void		 usage(void);
 
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_visibility(TreeNode *node, const char *pattern);
 
+static char		*current_filename;
 static char		*filter_pattern;
 
 GtkWidget	*tree_view;
@@ -59,6 +61,7 @@ GtkWidget	*descr_view;
 
 TreeNode	*current_node;
 
+/* // ???
 static struct {
     GtkWidget *p;
     struct {
@@ -84,17 +87,22 @@ static struct {
         } right;
     } paned;
 } window;
+*/
 
 int
 main(int argc, char **argv)
 {
 	GtkWidget	*window;
+	GtkWidget	*vbox;
+	GtkWidget	*toolbar;
 	GtkWidget	*paned;
 	GtkWidget	*left;
 	GtkWidget	*right;
 
-	if (argc < 2)
+	if (argc < 2) {
+		usage();
 		return 1;
+	}
 
 	gtk_init(&argc, &argv);
 
@@ -102,19 +110,29 @@ main(int argc, char **argv)
 	gtk_window_set_default_size (GTK_WINDOW(window), 640, 480);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
 
+	vbox = gtk_vbox_new(FALSE, 0);
+	toolbar = create_toolbar();
 	paned = gtk_hpaned_new();
-	left  = create_left_pane(argv[1]);
+	left = create_left_pane(argv[1]);
 	right = create_right_pane();
 
+	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), paned, TRUE, TRUE, 0);
 	gtk_paned_add1(GTK_PANED(paned), left);
 	gtk_paned_add2(GTK_PANED(paned), right);
-	gtk_container_add(GTK_CONTAINER(window), paned);
+	gtk_container_add(GTK_CONTAINER(window), vbox);
 
 	gtk_widget_show_all(window);
 
 	gtk_main();
 
 	return 0;
+}
+
+static void
+usage(void)
+{
+	g_print("usage: browse_tree <filename>\n");
 }
 
 static GtkWidget *
@@ -149,6 +167,51 @@ create_left_pane(const char *filename)
 	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, GTK_STOCK_FIND);
 
 	return box;
+}
+
+static int
+load_file(const char *filename, Tree *tree)
+{
+	FILE		*fp;
+	char		*buf;
+	char		*path;
+	char		*descr;
+	char		*tok;
+	TreeNode	*parent;
+	TreeNode	*child;
+
+	fp = fopen(filename, "r");
+	if (fp == NULL)
+		return -1;
+
+	while ((buf = fp_gets(fp)) != NULL) {
+		chop_space(buf);
+		if (*buf == '\0') /* skip empty lines */
+			continue;
+		path = buf;
+		descr = strchr(buf, ' ');
+		if (descr != NULL)
+			*descr++ = '\0';
+		parent = tree->root;
+		child = NULL;
+		tok = strtok(path, DELIM);
+		while (tok != NULL) {
+			child = tree_vivify_child(parent, tok);
+			parent = child;
+			tok = strtok(NULL, DELIM);
+		}
+		if (child != NULL) {
+			if (descr != NULL)
+				child->descr = decode_descr(descr);
+			else
+				child->descr = NULL;
+		}
+		free(buf);
+	}
+	fclose(fp);
+	tree_set_parents(tree->root);
+
+	return 0;
 }
 
 static GtkWidget *
@@ -217,7 +280,7 @@ cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data)
 }
 
 static void
-load_descr(void)
+display_descr(void)
 {
 	GtkTextBuffer	*tbuf;
 
@@ -303,12 +366,12 @@ cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data)
 {
 	store_descr();
 	current_node = get_first_selected_node();
-	load_descr();
-	load_path();
+	display_descr();
+	display_path();
 }
 
 static void
-load_path(void)
+display_path(void)
 {
 	TreeNode	*node = current_node;
 	int		 i;
@@ -364,7 +427,8 @@ parse(const char *filename)
 	char		*descr;
 	char		*tok;
         Tree		*tree;
-	TreeNode	*parent, *child;
+	TreeNode	*parent;
+	TreeNode	*child;
 	GtkTreeModel	*filter;
 
 	fp = fopen(filename, "r");
@@ -499,15 +563,32 @@ chop_space(char *s)
 }
 
 
+static void
+cb_open_clicked(GtkWidget *widget, gpointer data)
+{
+	g_print("%s()\n", __func__);
+}
+
 static GtkWidget *
 create_toolbar(void)
 {
 	GtkWidget	*toolbar;
+	GtkToolItem	*save_btn;
+	GtkToolItem	*open_btn;
 
 	toolbar = gtk_toolbar_new();
+	save_btn = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
+	open_btn = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
 
 	gtk_toolbar_set_orientation (GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 	gtk_toolbar_set_tooltips(GTK_TOOLBAR(toolbar), TRUE);
-	/* TODO */
+
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save_btn, -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), open_btn, -1);
+
+	g_signal_connect(GTK_WIDGET(save_btn), "clicked", G_CALLBACK(cb_save_clicked), NULL);
+	g_signal_connect(GTK_WIDGET(open_btn), "clicked", G_CALLBACK(cb_open_clicked), NULL);
+
+	return toolbar;
 }
