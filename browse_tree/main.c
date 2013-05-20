@@ -38,7 +38,6 @@ static void		 cb_entry_changed(GtkWidget *widget, gpointer user_data);
 static gboolean		 cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data);
 static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
 static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
-static GtkTreeModel	*parse(const char *filename);
 static char		*decode_descr(char *s);
 static void		 display_descr(void);
 static char		*get_descr(void);
@@ -46,48 +45,32 @@ static void		 store_descr(void);
 static void		 display_path(void);
 static GtkWidget	*create_toolbar(void);
 static void		 usage(void);
+static int		 load_file(const char *filename);
 
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_visibility(TreeNode *node, const char *pattern);
 
-static char		*current_filename;
-static char		*filter_pattern;
+/*
+static struct {
+	struct {
+		GtkWidget	*view;
+		GtkTreeModel	*model;
+		GtkTreeModel	*model_filter;
+	} tree;
+} widgets;
+*/
 
 GtkWidget	*tree_view;
+GtkTreeModel	*tree_model_filter;
+GtkTreeModel	*tree_model;
 GtkWidget	*path_entry;
 GtkWidget	*descr_view;
 
-TreeNode	*current_node;
-
-/* // ???
-static struct {
-    GtkWidget *p;
-    struct {
-        GtkWidget *p;
-        struct {
-            GtkWidget *p;
-            struct {
-                GtkWidget *p;
-                GtkWidget *search_entry;
-                struct {
-                    GtkWidget   *p;
-                    GtkTreeView *tree;
-                } scroll_win;
-                struct {
-                    GtkWidget *p;
-                    GtkWidget *expand_btn;
-                    GtkWidget *collapse_btn;
-                } btn_box;
-            } vbox;
-        } left;
-        struct {
-            GtkWidget *p;
-        } right;
-    } paned;
-} window;
-*/
+static char	*current_filename;
+static char	*filter_pattern;
+static TreeNode	*current_node;
 
 int
 main(int argc, char **argv)
@@ -121,6 +104,9 @@ main(int argc, char **argv)
 	gtk_paned_add1(GTK_PANED(paned), left);
 	gtk_paned_add2(GTK_PANED(paned), right);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
+
+	if (load_file(argv[1]) != 0)
+		g_warning("%s: failed to load file", argv[1]);
 
 	gtk_widget_show_all(window);
 
@@ -170,7 +156,7 @@ create_left_pane(const char *filename)
 }
 
 static int
-load_file(const char *filename, Tree *tree)
+load_file(const char *filename)
 {
 	FILE		*fp;
 	char		*buf;
@@ -183,7 +169,7 @@ load_file(const char *filename, Tree *tree)
 	fp = fopen(filename, "r");
 	if (fp == NULL)
 		return -1;
-
+	tree_clear(TREE(tree_model));
 	while ((buf = fp_gets(fp)) != NULL) {
 		chop_space(buf);
 		if (*buf == '\0') /* skip empty lines */
@@ -192,7 +178,7 @@ load_file(const char *filename, Tree *tree)
 		descr = strchr(buf, ' ');
 		if (descr != NULL)
 			*descr++ = '\0';
-		parent = tree->root;
+		parent = TREE(tree_model)->root;
 		child = NULL;
 		tok = strtok(path, DELIM);
 		while (tok != NULL) {
@@ -209,7 +195,11 @@ load_file(const char *filename, Tree *tree)
 		free(buf);
 	}
 	fclose(fp);
-	tree_set_parents(tree->root);
+	tree_set_parents(TREE(tree_model)->root);
+	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(tree_model_filter));
+
+	free(current_filename);
+	current_filename = xstrdup(filename);
 
 	return 0;
 }
@@ -336,14 +326,15 @@ create_view_and_model(const char *filename)
 {
 	GtkTreeViewColumn	*col;
 	GtkCellRenderer		*renderer;
-	GtkWidget		*view;
-	GtkTreeModel		*model;
 	GtkTreeSelection	*sel;
+	GtkWidget		*view;
 
-	model = parse(filename);
-	view = gtk_tree_view_new_with_model(model);
+	tree_model = (GtkTreeModel *) tree_new();
+	tree_model_filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(tree_model), NULL);
+	gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(tree_model_filter), cb_is_visible, tree_model, NULL);
+	view = gtk_tree_view_new_with_model(tree_model_filter);
 
-	g_object_unref(model); /* destroy store automatically with view */
+	g_object_unref(tree_model); /* destroy store automatically with view */
 
 	renderer = gtk_cell_renderer_text_new();
 	col = gtk_tree_view_column_new();
@@ -418,6 +409,7 @@ cb_entry_changed(GtkWidget *widget, gpointer data)
 	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(model));
 }
 
+#if 0
 static GtkTreeModel *
 parse(const char *filename)
 {
@@ -465,6 +457,7 @@ parse(const char *filename)
 
 	return (GtkTreeModel *) filter;
 }
+#endif
 
 static inline char
 esc2char(char c)

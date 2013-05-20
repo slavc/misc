@@ -72,5 +72,6 @@ TreeNode	*tree_vivify_child(TreeNode *parent, const char *data);
 void		 tree_set_parents(TreeNode *parent);
 void		 tree_print(TreeNode *node, size_t depth);
 gboolean	 tree_get_iter_visible(GtkTreeModel *model, GtkTreeIter *iter, GtkTreePath *path);
+void		 tree_clear(Tree *tree);
 
 #endif 

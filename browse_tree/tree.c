@@ -604,3 +604,10 @@ tree_get_iter_visible(GtkTreeModel *model, GtkTreeIter *iter, GtkTreePath *path)
 	iter->user_data = node;
 	return TRUE;
 }
+
+void
+tree_clear(Tree *tree)
+{
+	tree_free(tree->root);
+	tree_init(tree);
+}
