@@ -14,6 +14,8 @@
 #include <gdk/gdk.h>
 
 #include "tree.h"
+#include "descr.h"
+#include "util.h"
 #include "xmem.h"
 #include "str.h"
 #include "file.h"
@@ -28,17 +30,16 @@
  * store_*() functions -- update the model with current value from the view.
  */
 
-static GtkWidget	*create_left_pane(const char *filename);
+static GtkWidget	*create_left_pane(void);
 static GtkWidget	*create_right_pane(void);
 static void		 cb_expand_clicked(GtkWidget *widget, gpointer data);
 static void		 cb_collapse_clicked(GtkWidget *widget, gpointer data);
-static GtkWidget	*create_view_and_model(const char *filename);
+static GtkWidget	*create_view_and_model(void);
 static void		 cb_save_clicked(GtkWidget *widget, gpointer user_data);
 static void		 cb_entry_changed(GtkWidget *widget, gpointer user_data);
 static gboolean		 cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data);
 static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
 static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
-static char		*decode_descr(char *s);
 static void		 display_descr(void);
 static char		*get_descr(void);
 static void		 store_descr(void);
@@ -46,22 +47,14 @@ static void		 display_path(void);
 static GtkWidget	*create_toolbar(void);
 static void		 usage(void);
 static int		 load_file(const char *filename);
+static char		*fmt_node_path(TreeNode *node);
 
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_visibility(TreeNode *node, const char *pattern);
 
-/*
-static struct {
-	struct {
-		GtkWidget	*view;
-		GtkTreeModel	*model;
-		GtkTreeModel	*model_filter;
-	} tree;
-} widgets;
-*/
-
+GtkWidget	*window;
 GtkWidget	*tree_view;
 GtkTreeModel	*tree_model_filter;
 GtkTreeModel	*tree_model;
@@ -75,17 +68,11 @@ static TreeNode	*current_node;
 int
 main(int argc, char **argv)
 {
-	GtkWidget	*window;
 	GtkWidget	*vbox;
 	GtkWidget	*toolbar;
 	GtkWidget	*paned;
 	GtkWidget	*left;
 	GtkWidget	*right;
-
-	if (argc < 2) {
-		usage();
-		return 1;
-	}
 
 	gtk_init(&argc, &argv);
 
@@ -96,7 +83,7 @@ main(int argc, char **argv)
 	vbox = gtk_vbox_new(FALSE, 0);
 	toolbar = create_toolbar();
 	paned = gtk_hpaned_new();
-	left = create_left_pane(argv[1]);
+	left = create_left_pane();
 	right = create_right_pane();
 
 	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
@@ -105,8 +92,10 @@ main(int argc, char **argv)
 	gtk_paned_add2(GTK_PANED(paned), right);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
 
-	if (load_file(argv[1]) != 0)
-		g_warning("%s: failed to load file", argv[1]);
+	if (argc > 1) {
+		if (load_file(argv[1]) != 0)
+			g_warning("%s: failed to load file", argv[1]);
+	}
 
 	gtk_widget_show_all(window);
 
@@ -118,11 +107,11 @@ main(int argc, char **argv)
 static void
 usage(void)
 {
-	g_print("usage: browse_tree <filename>\n");
+	g_print("usage: browse_tree [<filename>]\n");
 }
 
 static GtkWidget *
-create_left_pane(const char *filename)
+create_left_pane(void)
 {
 	GtkWidget	*box;
 	GtkWidget	*entry;
@@ -134,7 +123,7 @@ create_left_pane(const char *filename)
 	box       = gtk_vbox_new(FALSE, FALSE);
 	entry     = gtk_entry_new();
 	swin      = gtk_scrolled_window_new(NULL, NULL);
-	tree_view = create_view_and_model(filename);
+	tree_view = create_view_and_model();
 	bbox      = gtk_hbutton_box_new();
 	expand    = gtk_button_new_with_label("Expand");
 	collapse  = gtk_button_new_with_label("Collapse");
@@ -155,9 +144,18 @@ create_left_pane(const char *filename)
 	return box;
 }
 
+static void
+create_tree_model(GtkTreeModel **model, GtkTreeModel **model_filter)
+{
+	*model = (GtkTreeModel *) tree_new();
+	*model_filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(*model), NULL);
+	gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(*model_filter), cb_is_visible, *model, NULL);
+}
+
 static int
 load_file(const char *filename)
 {
+
 	FILE		*fp;
 	char		*buf;
 	char		*path;
@@ -169,7 +167,7 @@ load_file(const char *filename)
 	fp = fopen(filename, "r");
 	if (fp == NULL)
 		return -1;
-	tree_clear(TREE(tree_model));
+	create_tree_model(&tree_model, &tree_model_filter);
 	while ((buf = fp_gets(fp)) != NULL) {
 		chop_space(buf);
 		if (*buf == '\0') /* skip empty lines */
@@ -187,8 +185,8 @@ load_file(const char *filename)
 			tok = strtok(NULL, DELIM);
 		}
 		if (child != NULL) {
-			if (descr != NULL)
-				child->descr = decode_descr(descr);
+			if (descr != NULL && *descr != '\0')
+				child->descr = descr_decode(descr);
 			else
 				child->descr = NULL;
 		}
@@ -197,9 +195,13 @@ load_file(const char *filename)
 	fclose(fp);
 	tree_set_parents(TREE(tree_model)->root);
 	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(tree_model_filter));
+	gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view), GTK_TREE_MODEL(tree_model_filter));
+	g_object_unref(tree_model);
+	g_object_unref(tree_model_filter);
 
 	free(current_filename);
 	current_filename = xstrdup(filename);
+	current_node = NULL;
 
 	return 0;
 }
@@ -239,8 +241,6 @@ get_first_selected_node(void)
 	GtkTreeIter		 iter;
 	TreeNode		*node;
 
-	char			*tmp;
-
 	modelf = gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view));
 	model = gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(modelf));
 	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
@@ -249,9 +249,6 @@ get_first_selected_node(void)
 		return NULL;
 	first = g_list_first(list);
 	path = first->data;
-
-	tmp = gtk_tree_path_to_string(path);
-	g_free(tmp);
 
 	if (tree_get_iter_visible(model, &iter, path))
 		node = iter.user_data;
@@ -322,29 +319,25 @@ cb_collapse_clicked(GtkWidget *widget, gpointer data)
 }
 
 static GtkWidget *
-create_view_and_model(const char *filename)
+create_view_and_model(void)
 {
 	GtkTreeViewColumn	*col;
 	GtkCellRenderer		*renderer;
 	GtkTreeSelection	*sel;
 	GtkWidget		*view;
 
-	tree_model = (GtkTreeModel *) tree_new();
-	tree_model_filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(tree_model), NULL);
-	gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(tree_model_filter), cb_is_visible, tree_model, NULL);
+	create_tree_model(&tree_model, &tree_model_filter);
 	view = gtk_tree_view_new_with_model(tree_model_filter);
-
-	g_object_unref(tree_model); /* destroy store automatically with view */
-
+	g_object_unref(tree_model);
+	g_object_unref(tree_model_filter);
 	renderer = gtk_cell_renderer_text_new();
 	col = gtk_tree_view_column_new();
+	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 
 	gtk_tree_view_column_pack_start (col, renderer, TRUE);
 	gtk_tree_view_column_add_attribute (col, renderer, "text", TREE_COL_DATA);
-	gtk_tree_view_column_set_title (col, filename);
 	gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
-
-	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
+	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
 	gtk_tree_selection_set_mode(sel, GTK_SELECTION_MULTIPLE);
 
 	g_signal_connect(sel, "changed", G_CALLBACK(cb_tree_selection_changed), NULL);
@@ -364,29 +357,85 @@ cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data)
 static void
 display_path(void)
 {
-	TreeNode	*node = current_node;
-	int		 i;
-	char		*s = NULL;
+	char		*path;
 
 	if (current_node == NULL) {
 		gtk_entry_set_text(GTK_ENTRY(path_entry), "");
 		return;
 	}
 
-	for (i = 0; node != NULL && node->parent != NULL; ++i, node = node->parent) {
-		if (i == 0)
-			s = xstrdup(node->data);
-		else
-			s = str_prepend(s, "%s.", node->data);
+	path = fmt_node_path(current_node);
+	gtk_entry_set_text(GTK_ENTRY(path_entry), path);
+	xfree(path);
+}
+
+static char *
+fmt_node_path(TreeNode *node)
+{
+	int	 i;
+	char	*s = NULL;
+
+	for (i = 0; node != NULL && node->parent != NULL; ++i, node = node->parent)
+		s = str_prepend(s, i == 0 ? "%s" : "%s.", node->data);
+	return s;
+}
+
+static int
+cb_write_node_to_file(TreeNode *node, void *data)
+{
+	FILE	*fp = data;
+	char	*path;
+	char	*descr;
+
+	path = fmt_node_path(node);
+	fprintf(fp, "%s", path);
+	xfree(path);
+	if (node->descr == NULL) {
+		fputc('\n', fp);
+	} else {
+		descr = descr_encode(node->descr);
+		fprintf(fp, " %s\n", descr);
+		xfree(descr);
 	}
-	gtk_entry_set_text(GTK_ENTRY(path_entry), s);
-	xfree(s);
+	return 0;
+}
+
+static int
+save_file(const char *filename)
+{
+	FILE	*fp;
+
+	g_print("%s()\n", __func__);
+
+	fp = fopen(filename, "w");
+	if (fp == NULL)
+		return -1;
+	tree_foreach_leaf(TREE(tree_model), cb_write_node_to_file, fp);
+	fclose(fp);
+	return 0;
 }
 
 static void
 cb_save_clicked(GtkWidget *widget, gpointer user_data)
 {
-	g_print("save clicked\n");
+	GtkWidget	*dialog;
+	char		*filename;
+
+	store_descr();
+
+	if (current_filename == NULL) {
+		dialog = gtk_file_chooser_dialog_new("Save File", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
+		if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+			filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+			save_file(filename);
+			xfree(current_filename);
+			current_filename = xstrdup(filename);
+			g_free(filename);
+		}
+		gtk_widget_destroy(dialog);
+	} else {
+		save_file(current_filename);
+	}
 }
 
 static void
@@ -407,92 +456,6 @@ cb_entry_changed(GtkWidget *widget, gpointer data)
 		update_visibility(tree->root, filter_pattern);
 	}
 	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(model));
-}
-
-#if 0
-static GtkTreeModel *
-parse(const char *filename)
-{
-	FILE		*fp;
-	char		*buf;
-	char		*path;
-	char		*descr;
-	char		*tok;
-        Tree		*tree;
-	TreeNode	*parent;
-	TreeNode	*child;
-	GtkTreeModel	*filter;
-
-	fp = fopen(filename, "r");
-	if (fp == NULL)
-		err(1, "%s", filename);
-
-        tree = tree_new();
-	while ((buf = fp_gets(fp)) != NULL) {
-		chop_space(buf);
-		if (*buf == '\0') /* skip empty lines */
-			continue;
-		path = buf;
-		descr = strchr(buf, ' ');
-		if (descr != NULL)
-			*descr++ = '\0';
-		parent = tree->root;
-		tok = strtok(path, DELIM);
-		while (tok != NULL) {
-			child = tree_vivify_child(parent, tok);
-			parent = child;
-			tok = strtok(NULL, DELIM);
-		}
-		if (descr != NULL)
-			child->descr = decode_descr(descr);
-		else
-			child->descr = NULL;
-		free(buf);
-	}
-	fclose(fp);
-	tree_set_parents(tree->root);
-
-	filter = gtk_tree_model_filter_new(GTK_TREE_MODEL(tree), NULL);
-	gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(filter), cb_is_visible, tree, NULL);
-
-	return (GtkTreeModel *) filter;
-}
-#endif
-
-static inline char
-esc2char(char c)
-{
-	switch (c) {
-	case 'n':
-		return '\n';
-	case 'r':
-		return '\r';
-	default:
-		return c;
-	}
-}
-
-static char *
-decode_descr(char *s)
-{
-	char	*buf;
-	char	*p, *q;
-	size_t	 slen;
-
-	slen = strlen(s);
-	buf = xmalloc(slen + 1);
-
-	s[slen - 1] = '\0'; // remove the last quote
-	for (p = s + 1, q = buf; *p != '\0'; ++p, ++q) {
-		if (*p == '\\') {
-			++p;
-			*q = esc2char(*p);
-		} else {
-			*q = *p;
-		}
-	}
-
-	return buf;
 }
 
 static void
@@ -559,7 +522,16 @@ chop_space(char *s)
 static void
 cb_open_clicked(GtkWidget *widget, gpointer data)
 {
-	g_print("%s()\n", __func__);
+	GtkWidget	*dialog;
+	char		*filename;
+
+	dialog = gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
+	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+		load_file(filename);
+		g_free(filename);
+	}
+	gtk_widget_destroy(dialog);
 }
 
 static GtkWidget *

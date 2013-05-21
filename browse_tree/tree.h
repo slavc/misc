@@ -25,6 +25,8 @@ typedef struct _TreeNode   TreeNode;
 typedef struct _Tree       Tree;
 typedef struct _TreeClass  TreeClass;
 
+typedef int (*tree_walker_func_t)(TreeNode *, void *);
+
 
 /* CustomRecord: this structure represents a row */
 
@@ -73,5 +75,6 @@ void		 tree_set_parents(TreeNode *parent);
 void		 tree_print(TreeNode *node, size_t depth);
 gboolean	 tree_get_iter_visible(GtkTreeModel *model, GtkTreeIter *iter, GtkTreePath *path);
 void		 tree_clear(Tree *tree);
+int		 tree_foreach_leaf(Tree *tree, tree_walker_func_t cb, void *data);
 
 #endif 

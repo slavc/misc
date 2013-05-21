@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef STR_H
-#define STR_H
+#ifndef CLIB_STR_H
+#define CLIB_STR_H
 
 /**
  * Prepend `s' with a string formatted from `fmt' and va_args.

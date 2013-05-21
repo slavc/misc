@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -g -DTEST_FP_GETS -DTEST_STR
+CFLAGS+=-Wall -g -DTEST_FP_GETS -DTEST_STR
 
 all: test_file
 

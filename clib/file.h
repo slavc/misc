@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef FILE_H
-#define FILE_H
+#ifndef CLIB_FILE_H
+#define CLIB_FILE_H
 
 #include <stdio.h>
 

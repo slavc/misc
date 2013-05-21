@@ -14,8 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef XMEM_H
-#define XMEM_H
+#ifndef CLIB_XMEM_H
+#define CLIB_XMEM_H
 
 void	*xmalloc(size_t);
 void	*xcalloc(size_t, size_t);

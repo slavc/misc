@@ -609,5 +609,28 @@ void
 tree_clear(Tree *tree)
 {
 	tree_free(tree->root);
+	free(tree->root);
 	tree_init(tree);
+}
+
+static int
+foreach_leaf(TreeNode *node, tree_walker_func_t cb, void *data)
+{
+	int	 i;
+	int	 rc;
+
+	if (node->nchildren == 0)
+		return cb(node, data);
+	for (i = 0; i < node->nchildren; ++i) {
+		rc = foreach_leaf(node->children + i, cb, data);
+		if (rc != 0)
+			return rc;
+	}
+	return 0;
+}
+
+int
+tree_foreach_leaf(Tree *tree, tree_walker_func_t cb, void *data)
+{
+	return foreach_leaf(tree->root, cb, data);
 }
