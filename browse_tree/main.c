@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <libgen.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -48,18 +49,28 @@ static GtkWidget	*create_toolbar(void);
 static void		 usage(void);
 static int		 load_file(const char *filename);
 static char		*fmt_node_path(TreeNode *node);
-
 static void		 chop_space(char *s);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_visibility(TreeNode *node, const char *pattern);
+static guint		 push_status(const char *fmt, ...);
+static void		 pop_status(void);
+static void		 update_title(void);
+static const char	*base_name(const char *path);
+static void		 perform_search(void);
+static void		 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data);
 
-GtkWidget	*window;
-GtkWidget	*tree_view;
-GtkTreeModel	*tree_model_filter;
-GtkTreeModel	*tree_model;
-GtkWidget	*path_entry;
-GtkWidget	*descr_view;
+const char		*program_name;
+
+static GtkWidget	*window;
+static GtkWidget	*tree_view;
+static GtkTreeModel	*tree_model_filter;
+static GtkTreeModel	*tree_model;
+static GtkWidget	*path_entry;
+static GtkWidget	*descr_view;
+static GtkWidget	*statusbar;
+static guint		 statusbar_context_id;
+static int		 search_by_descriptions_enabled;
 
 static char	*current_filename;
 static char	*filter_pattern;
@@ -74,10 +85,11 @@ main(int argc, char **argv)
 	GtkWidget	*left;
 	GtkWidget	*right;
 
+	program_name = base_name(argv[0]);
 	gtk_init(&argc, &argv);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size (GTK_WINDOW(window), 640, 480);
+	gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
 	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
 
 	vbox = gtk_vbox_new(FALSE, 0);
@@ -85,23 +97,84 @@ main(int argc, char **argv)
 	paned = gtk_hpaned_new();
 	left = create_left_pane();
 	right = create_right_pane();
+	statusbar = gtk_statusbar_new();
 
 	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), paned, TRUE, TRUE, 0);
 	gtk_paned_add1(GTK_PANED(paned), left);
 	gtk_paned_add2(GTK_PANED(paned), right);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
+	gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, FALSE, 0);
+
+	gtk_widget_show_all(window);
+
+	push_status("Idle");
 
 	if (argc > 1) {
 		if (load_file(argv[1]) != 0)
 			g_warning("%s: failed to load file", argv[1]);
 	}
 
-	gtk_widget_show_all(window);
+	update_title();
 
 	gtk_main();
 
 	return 0;
+}
+
+static const char *
+base_name(const char *path)
+{
+	const char	*p;
+
+	p = strrchr(path, '/');
+	if (p == NULL)
+		return path;
+	else
+		return p + 1;
+}
+
+static void
+update_title(void)
+{
+	char	 buf[1024];
+
+	if (current_filename == NULL) {
+		gtk_window_set_title(GTK_WINDOW(window), program_name);
+	} else {
+		if (snprintf(buf, sizeof buf, "%s: %s", program_name, base_name(current_filename)) > 0)
+			gtk_window_set_title(GTK_WINDOW(window), buf);
+		else
+			warn("snprintf");
+	}
+}
+
+static guint
+push_status(const char *fmt, ...)
+{
+	static const gchar	*context_name = NULL;
+	va_list			 ap;
+	int			 rc;
+	char			 buf[2048];
+
+	if (context_name == NULL) {
+		context_name = "default_context";
+		statusbar_context_id = gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), context_name);
+	}
+
+	va_start(ap, fmt);
+	rc = vsnprintf(buf, sizeof buf, fmt, ap);
+	va_end(ap);
+	if (rc < 0)
+		return 0;
+	else
+		return gtk_statusbar_push(GTK_STATUSBAR(statusbar), statusbar_context_id, buf);
+}
+
+static void
+pop_status(void)
+{
+	gtk_statusbar_pop(GTK_STATUSBAR(statusbar), statusbar_context_id);
 }
 
 static void
@@ -114,13 +187,17 @@ static GtkWidget *
 create_left_pane(void)
 {
 	GtkWidget	*box;
+	GtkWidget	*vbox;
 	GtkWidget	*entry;
+	GtkWidget	*check;
 	GtkWidget	*swin;
 	GtkWidget	*bbox;
 	GtkWidget	*expand;
 	GtkWidget	*collapse;
 
 	box       = gtk_vbox_new(FALSE, FALSE);
+	vbox      = gtk_vbox_new(FALSE, FALSE);
+	check     = gtk_check_button_new_with_label("Search descriptions");
 	entry     = gtk_entry_new();
 	swin      = gtk_scrolled_window_new(NULL, NULL);
 	tree_view = create_view_and_model();
@@ -128,20 +205,30 @@ create_left_pane(void)
 	expand    = gtk_button_new_with_label("Expand");
 	collapse  = gtk_button_new_with_label("Collapse");
 
-	gtk_box_pack_start(GTK_BOX(box), entry, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), swin,  TRUE,  TRUE,  0);
-	gtk_box_pack_start(GTK_BOX(box), bbox,  FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), check, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box),  vbox,  FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box),  swin,  TRUE,  TRUE,  0);
+	gtk_box_pack_start(GTK_BOX(box),  bbox,  FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(swin), tree_view);
 	gtk_container_add(GTK_CONTAINER(bbox), expand);
 	gtk_container_add(GTK_CONTAINER(bbox), collapse);
 
-	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),    tree_view);
-	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),   NULL);
-	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked), NULL);
+	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),               tree_view);
+	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),              NULL);
+	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked),            NULL);
+	g_signal_connect(check,    "toggled", G_CALLBACK(cb_search_descriptions_toggled), NULL);
 
 	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, GTK_STOCK_FIND);
 
 	return box;
+}
+
+static void
+cb_search_descriptions_toggled(GtkWidget *widget, gpointer data)
+{
+	search_by_descriptions_enabled = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	perform_search();
 }
 
 static void
@@ -167,6 +254,8 @@ load_file(const char *filename)
 	fp = fopen(filename, "r");
 	if (fp == NULL)
 		return -1;
+	current_node = NULL;
+	push_status("Loading %s...", base_name(filename));
 	create_tree_model(&tree_model, &tree_model_filter);
 	while ((buf = fp_gets(fp)) != NULL) {
 		chop_space(buf);
@@ -201,7 +290,8 @@ load_file(const char *filename)
 
 	free(current_filename);
 	current_filename = xstrdup(filename);
-	current_node = NULL;
+
+	pop_status();
 
 	return 0;
 }
@@ -334,9 +424,9 @@ create_view_and_model(void)
 	col = gtk_tree_view_column_new();
 	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(view));
 
-	gtk_tree_view_column_pack_start (col, renderer, TRUE);
-	gtk_tree_view_column_add_attribute (col, renderer, "text", TREE_COL_DATA);
-	gtk_tree_view_append_column(GTK_TREE_VIEW(view),col);
+	gtk_tree_view_column_pack_start(col, renderer, TRUE);
+	gtk_tree_view_column_add_attribute(col, renderer, "text", TREE_COL_DATA);
+	gtk_tree_view_append_column(GTK_TREE_VIEW(view), col);
 	gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(view), FALSE);
 	gtk_tree_selection_set_mode(sel, GTK_SELECTION_MULTIPLE);
 
@@ -441,21 +531,24 @@ cb_save_clicked(GtkWidget *widget, gpointer user_data)
 static void
 cb_entry_changed(GtkWidget *widget, gpointer data)
 {
-	GtkTreeModel	*model;
-	Tree		*tree;
-
 	if (filter_pattern != NULL)
 		free(filter_pattern);
 	filter_pattern = xstrdup(gtk_entry_get_text(GTK_ENTRY(widget)));
-	model = gtk_tree_view_get_model(GTK_TREE_VIEW(data));
-	tree = (Tree *) gtk_tree_model_filter_get_model(GTK_TREE_MODEL_FILTER(model));
-	if (*filter_pattern == '\0') {
-		tree_set_flags(tree->root, TREE_NODE_VISIBLE);
+	perform_search();
+}
+
+static void
+perform_search(void)
+{
+	push_status("Searching...");
+	if (filter_pattern == NULL || *filter_pattern == '\0') {
+		tree_set_flags(TREE(tree_model)->root, TREE_NODE_VISIBLE);
 	} else {
-		tree_clear_flags(tree->root, ~0);
-		update_visibility(tree->root, filter_pattern);
+		tree_clear_flags(TREE(tree_model)->root, ~0);
+		update_visibility(TREE(tree_model)->root, filter_pattern);
 	}
-	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(model));
+	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(tree_model_filter));
+	pop_status();
 }
 
 static void
@@ -487,7 +580,8 @@ update_visibility(TreeNode *node, const char *pattern)
 	if (node->flags & TREE_NODE_WALKED)
 		return;
 	node->flags |= TREE_NODE_WALKED;
-	if (strstr(node->data, pattern) != NULL) {
+	if (strstr(node->data, pattern) != NULL ||
+	    (search_by_descriptions_enabled && node->descr != NULL && strstr(node->descr, pattern) != NULL)) {
 		for (parent = node->parent; parent != NULL; parent = parent->parent)
 			parent->flags |= TREE_NODE_WALKED | TREE_NODE_VISIBLE;
 		tree_set_flags(node, TREE_NODE_WALKED | TREE_NODE_VISIBLE);
