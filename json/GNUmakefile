@@ -22,8 +22,11 @@ all: test
 test: parse.o test.o json.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
+test2: parse.o test2.o json.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+
 clean:
-	rm -f *.o test js0n gmon.out
+	rm -f *.o test test2 js0n gmon.out
 
 remake: clean all
 

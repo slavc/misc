@@ -418,4 +418,21 @@ namespace json {
         for (auto i = l.begin(); i != l.end(); ++i)
             this->m_u.a->push_back(*i);
     }
+
+    bool value::has(const std::string& key) const {
+        if (m_type != OBJECT)
+            throw illegal_op();
+        if (m_u.o->find(key) != m_u.o->end())
+            return true;
+        else
+            return false;
+    }
+
+    bool value::operator==(int i) const {
+        if (m_type != INTEGER)
+            throw illegal_op();
+        return m_u.i == i;
+    }
 }
+
+

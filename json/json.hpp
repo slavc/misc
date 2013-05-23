@@ -108,7 +108,9 @@ namespace json {
             value&             operator[] (size_t);
             const value&       operator[] (size_t)              const;
             bool               operator== (const std::string&)  const;
+            bool               operator== (int i)               const;
             value&             erase      (const std::string&);
+            bool               has        (const std::string&)  const;
 
             /* Static members */
 

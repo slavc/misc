@@ -1,0 +1,4 @@
+{"type":"login","data":{"login":"Jeff","passwd":"hunter2"}}
+{"data":{"rc":0,"sess_id":0},"token":"123","type":"login"}
+{"sess_id":0,"type":"get_ps"}
+{"sess_id":0,"type":"get_vmstat"}
