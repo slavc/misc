@@ -57,8 +57,9 @@ static guint		 push_status(const char *fmt, ...);
 static void		 pop_status(void);
 static void		 update_title(void);
 static const char	*base_name(const char *path);
-static void		 perform_search(void);
+static void		 filter_nodes(void);
 static void		 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data);
+static void		 cb_only_show_nodes_with_descrs_toggled(GtkWidget *widget, gpointer data);
 
 const char		*program_name;
 
@@ -71,6 +72,7 @@ static GtkWidget	*descr_view;
 static GtkWidget	*statusbar;
 static guint		 statusbar_context_id;
 static int		 search_by_descriptions_enabled;
+static int		 only_show_nodes_with_descriptions_enabled;
 
 static char	*current_filename;
 static char	*filter_pattern;
@@ -189,7 +191,8 @@ create_left_pane(void)
 	GtkWidget	*box;
 	GtkWidget	*vbox;
 	GtkWidget	*entry;
-	GtkWidget	*check;
+	GtkWidget	*check1;
+	GtkWidget	*check2;
 	GtkWidget	*swin;
 	GtkWidget	*bbox;
 	GtkWidget	*expand;
@@ -197,7 +200,8 @@ create_left_pane(void)
 
 	box       = gtk_vbox_new(FALSE, FALSE);
 	vbox      = gtk_vbox_new(FALSE, FALSE);
-	check     = gtk_check_button_new_with_label("Search descriptions");
+	check1    = gtk_check_button_new_with_label("Search descriptions");
+	check2    = gtk_check_button_new_with_label("Only show nodes with descriptions");
 	entry     = gtk_entry_new();
 	swin      = gtk_scrolled_window_new(NULL, NULL);
 	tree_view = create_view_and_model();
@@ -205,19 +209,21 @@ create_left_pane(void)
 	expand    = gtk_button_new_with_label("Expand");
 	collapse  = gtk_button_new_with_label("Collapse");
 
-	gtk_box_pack_start(GTK_BOX(vbox), entry, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(vbox), check, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box),  vbox,  FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box),  swin,  TRUE,  TRUE,  0);
-	gtk_box_pack_start(GTK_BOX(box),  bbox,  FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), entry,  FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), check1, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(vbox), check2, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box),  vbox,   FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box),  swin,   TRUE,  TRUE,  0);
+	gtk_box_pack_start(GTK_BOX(box),  bbox,   FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(swin), tree_view);
 	gtk_container_add(GTK_CONTAINER(bbox), expand);
 	gtk_container_add(GTK_CONTAINER(bbox), collapse);
 
-	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),               tree_view);
-	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),              NULL);
-	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked),            NULL);
-	g_signal_connect(check,    "toggled", G_CALLBACK(cb_search_descriptions_toggled), NULL);
+	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),                       tree_view);
+	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),                      NULL);
+	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked),                    NULL);
+	g_signal_connect(check1,   "toggled", G_CALLBACK(cb_search_descriptions_toggled),         NULL);
+	g_signal_connect(check2,   "toggled", G_CALLBACK(cb_only_show_nodes_with_descrs_toggled), NULL);
 
 	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, GTK_STOCK_FIND);
 
@@ -225,10 +231,17 @@ create_left_pane(void)
 }
 
 static void
+cb_only_show_nodes_with_descrs_toggled(GtkWidget *widget, gpointer data)
+{
+	only_show_nodes_with_descriptions_enabled = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+	filter_nodes();
+}
+
+static void
 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data)
 {
 	search_by_descriptions_enabled = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-	perform_search();
+	filter_nodes();
 }
 
 static void
@@ -242,7 +255,6 @@ create_tree_model(GtkTreeModel **model, GtkTreeModel **model_filter)
 static int
 load_file(const char *filename)
 {
-
 	FILE		*fp;
 	char		*buf;
 	char		*path;
@@ -381,7 +393,11 @@ get_descr(void)
 	gtk_text_buffer_get_start_iter(buf, &start);
 	gtk_text_buffer_get_end_iter(buf, &end);
 	tmp = gtk_text_buffer_get_text(buf, &start, &end, FALSE);
-	return tmp;
+	if (*tmp == '\0') {
+		g_free(tmp);
+		return NULL;
+	} else
+		return tmp;
 }
 
 static void
@@ -534,19 +550,15 @@ cb_entry_changed(GtkWidget *widget, gpointer data)
 	if (filter_pattern != NULL)
 		free(filter_pattern);
 	filter_pattern = xstrdup(gtk_entry_get_text(GTK_ENTRY(widget)));
-	perform_search();
+	filter_nodes();
 }
 
 static void
-perform_search(void)
+filter_nodes(void)
 {
 	push_status("Searching...");
-	if (filter_pattern == NULL || *filter_pattern == '\0') {
-		tree_set_flags(TREE(tree_model)->root, TREE_NODE_VISIBLE);
-	} else {
-		tree_clear_flags(TREE(tree_model)->root, ~0);
-		update_visibility(TREE(tree_model)->root, filter_pattern);
-	}
+	tree_clear_flags(TREE(tree_model)->root, ~0);
+	update_visibility(TREE(tree_model)->root, filter_pattern);
 	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(tree_model_filter));
 	pop_status();
 }
@@ -580,8 +592,11 @@ update_visibility(TreeNode *node, const char *pattern)
 	if (node->flags & TREE_NODE_WALKED)
 		return;
 	node->flags |= TREE_NODE_WALKED;
-	if (strstr(node->data, pattern) != NULL ||
-	    (search_by_descriptions_enabled && node->descr != NULL && strstr(node->descr, pattern) != NULL)) {
+	if ((pattern == NULL ||
+	    strstr(node->data, pattern) != NULL ||
+	    (search_by_descriptions_enabled && node->descr != NULL && strstr(node->descr, pattern) != NULL)
+	    ) &&
+	    (!only_show_nodes_with_descriptions_enabled || node->descr != NULL)) {
 		for (parent = node->parent; parent != NULL; parent = parent->parent)
 			parent->flags |= TREE_NODE_WALKED | TREE_NODE_VISIBLE;
 		tree_set_flags(node, TREE_NODE_WALKED | TREE_NODE_VISIBLE);

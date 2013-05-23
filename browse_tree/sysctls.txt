@@ -1,7 +1,7 @@
 abi.vsyscall32 "This is\nan example\ndescription.\n\nkqljweqlkqwe\n\n\n\naczxc\n\n"
 crypto.fips_enabled
 debug.exception-trace ""
-debug.kprobes-optimization
+debug.kprobes-optimization ""
 dev.cdrom.autoclose
 dev.cdrom.autoeject
 dev.cdrom.check_media

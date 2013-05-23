@@ -30,56 +30,6 @@ esc2chr(char c)
 	}
 }
 
-#if 0
-static size_t
-compute_enc_buf_size(const char *s)
-{
-	size_t		 size = 0;
-	struct xlat_tab	*tp;
-
-	while (*s != '\0') {
-		for (tp = tab; tp->s != NULL; ++tp) {
-			if (*s == tp->c) {
-				size += strlen(tp->s);
-				break;
-			}
-		}
-		if (tp->s == NULL)
-			size += 1;
-		++s;
-	}
-	size += 1; /* '\0' */
-
-	return size;
-}
-#endif
-
-#if 0
-char *
-descr_decode(char *s)
-{
-	char	*buf;
-	char	*bufp;
-	char	*p, *q;
-	size_t	 slen;
-
-	slen = strlen(s);
-	buf = xmalloc(slen + 1);
-
-	s[slen - 1] = '\0'; // remove the last quote
-	for (p = s + 1, q = buf; *p != '\0'; ++p, ++q) {
-		if (*p == '\\') {
-			++p;
-			*q = esc2chr(*p);
-		} else {
-			*q = *p;
-		}
-	}
-
-	return buf;
-}
-#endif
-
 char *
 descr_decode(const char *s)
 {
