@@ -1,0 +1,39 @@
+CFLAGS=-nologo \
+	/EHsc \
+	/I$(GTK_HOME)\include \
+	/I$(GTK_HOME)\include\atk-1.0 \
+	/I$(GTK_HOME)\include\cairo \
+	/I$(GTK_HOME)\include\fontconfig \
+	/I$(GTK_HOME)\include\freetype2 \
+	/I$(GTK_HOME)\include\gail-1.0 \
+	/I$(GTK_HOME)\include\gdk-pixbuf-2.0 \
+	/I$(GTK_HOME)\include\glib-2.0 \
+	/I$(GTK_HOME)\include\gtk-2.0 \
+	/I$(GTK_HOME)\include\libpng14 \
+	/I$(GTK_HOME)\include\pango-1.0 \
+	/I$(GTK_HOME)\include\pixman-1 \
+	/I$(GTK_HOME)\include\glib-2.0\glib \
+	/I$(GTK_HOME)\lib\glib-2.0\include \
+	/I$(GTK_HOME)\lib\gtk-2.0\include
+	
+CXXFLAGS=$(CFLAGS)
+
+LDFLAGS=/link \
+	/LIBPATH:$(GTK_HOME)\lib \
+	gtk-win32-2.0.lib \
+	glib-2.0.lib \
+	gobject-2.0.lib \
+	gdk_pixbuf-2.0.lib \
+	gdk-win32-2.0.lib \
+        cairo.lib
+#/SUBSYSTEM:WINDOWS \
+
+all: custpiechart.obj
+
+test: test_custpiechart.exe
+
+test_custpiechart.exe: test_custpiechart.obj custpiechart.obj
+	$(CC) $** /Fe$@ $(CFLAGS) $(LDFLAGS)
+	
+clean:
+	del test_custpiechart.exe *.obj
