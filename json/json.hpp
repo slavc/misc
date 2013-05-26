@@ -107,8 +107,7 @@ namespace json {
             const value&       operator[] (const std::string&)  const;
             value&             operator[] (size_t);
             const value&       operator[] (size_t)              const;
-            bool               operator== (const std::string&)  const;
-            bool               operator== (int i)               const;
+            bool               equals     (const value& v)      const;
             value&             erase      (const std::string&);
             bool               has        (const std::string&)  const;
 
@@ -170,8 +169,12 @@ namespace json {
     };
 
     value parse(const std::string &s);
+
+    inline bool operator==(const value& lhs, const value& rhs) {
+        return lhs.equals(rhs);
+    }
 };
 
-
 #endif
+
 

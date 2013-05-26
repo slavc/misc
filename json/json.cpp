@@ -395,9 +395,6 @@ namespace json {
         }
     }
 
-    bool value::operator==(const std::string &rhs) const {
-        return m_type == STRING && *m_u.s == rhs;
-    }
 
     value &value::erase(const std::string &key) {
         if (m_type == OBJECT)
@@ -428,10 +425,27 @@ namespace json {
             return false;
     }
 
-    bool value::operator==(int i) const {
-        if (m_type != INTEGER)
-            throw illegal_op();
-        return m_u.i == i;
+    bool value::equals(const value& rhs) const {
+        if (m_type != rhs.m_type)
+            return false;
+        switch (m_type) {
+        case NIL:
+            return true;
+        case INTEGER:
+            return m_u.i == rhs.m_u.i;
+        case DOUBLE:
+            return m_u.d == rhs.m_u.d;
+        case BOOLEAN:
+            return m_u.b == rhs.m_u.b;
+        case STRING:
+            return *m_u.s == *rhs.m_u.s;
+        case ARRAY:
+            return *m_u.a == *rhs.m_u.a;
+        case OBJECT:
+            return *m_u.o == *rhs.m_u.o;
+        default:
+            throw invalid_object();
+        }
     }
 }
 
