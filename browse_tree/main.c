@@ -589,8 +589,6 @@ update_visibility(TreeNode *node, const char *pattern)
 	TreeNode	*parent;
 	size_t		 i;
 
-	if (node->flags & TREE_NODE_WALKED)
-		return;
 	node->flags |= TREE_NODE_WALKED;
 	if ((pattern == NULL ||
 	    strstr(node->data, pattern) != NULL ||
@@ -598,8 +596,8 @@ update_visibility(TreeNode *node, const char *pattern)
 	    ) &&
 	    (!only_show_nodes_with_descriptions_enabled || node->descr != NULL)) {
 		for (parent = node->parent; parent != NULL; parent = parent->parent)
-			parent->flags |= TREE_NODE_WALKED | TREE_NODE_VISIBLE;
-		tree_set_flags(node, TREE_NODE_WALKED | TREE_NODE_VISIBLE);
+			parent->flags |= TREE_NODE_VISIBLE;
+		tree_set_flags(node, TREE_NODE_VISIBLE);
 		return;
 	}
 	for (i = 0; i < node->nchildren; ++i)
