@@ -19,7 +19,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "xmem.h"
+#include <xmem.h>
 
 void *
 xmalloc(size_t size)

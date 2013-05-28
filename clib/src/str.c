@@ -22,7 +22,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "xmem.h"
+#include <xmem.h>
 
 #define PREALLOC_SIZE	127
 

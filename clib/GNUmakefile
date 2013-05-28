@@ -1,13 +1,16 @@
-CC=gcc
-CFLAGS+=-Wall -g -DTEST_FP_GETS -DTEST_STR
+CC=cc
 
-all: test_file
+CFLAGS+=-Iinclude
+CFLAGS+=-Wall
+CFLAGS+=-O2
 
-test_file: file.o xmem.o
-	$(CC) -o $@ $(LDFLAGS) $^
+all: lib/ lib/libclib.a
 
-test_str: str.o xmem.o
-	$(CC) -o $@ $(LDFLAGS) $^
+lib/:
+	mkdir -p $@
+
+lib/libclib.a: src/str.o src/file.o src/xmem.o
+	ar -qc $@ $^
 
 clean:
-	rm -f *.o test_file
+	rm -rf lib/ src/*.o

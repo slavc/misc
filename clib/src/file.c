@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "xmem.h"
+#include <xmem.h>
 
 char *
 f_load(int fd)
