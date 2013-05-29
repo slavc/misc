@@ -24,6 +24,11 @@
 #define DELIM		"."
 #define MAX_LINE	8192
 
+struct node_expand_arg {
+	gboolean	do_expand;
+	gboolean	expand_all;
+};
+
 /*
  * "Model" -- the tree, "view" -- the graphical widgets which represent information.
  * display_*() functions  -- update the view with values from the model.
@@ -33,6 +38,7 @@
 
 static GtkWidget	*create_left_pane(void);
 static GtkWidget	*create_right_pane(void);
+static void		 cb_expand_fully_clicked(GtkWidget *widget, gpointer data);
 static void		 cb_expand_clicked(GtkWidget *widget, gpointer data);
 static void		 cb_collapse_clicked(GtkWidget *widget, gpointer data);
 static GtkWidget	*create_view_and_model(void);
@@ -60,6 +66,7 @@ static const char	*base_name(const char *path);
 static void		 filter_nodes(void);
 static void		 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data);
 static void		 cb_only_show_nodes_with_descrs_toggled(GtkWidget *widget, gpointer data);
+static void		 cb_set_node_expansion(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data);
 
 const char		*program_name;
 
@@ -195,19 +202,21 @@ create_left_pane(void)
 	GtkWidget	*check2;
 	GtkWidget	*swin;
 	GtkWidget	*bbox;
+	GtkWidget	*expand_fully;
 	GtkWidget	*expand;
 	GtkWidget	*collapse;
 
-	box       = gtk_vbox_new(FALSE, FALSE);
-	vbox      = gtk_vbox_new(FALSE, FALSE);
-	check1    = gtk_check_button_new_with_label("Search descriptions");
-	check2    = gtk_check_button_new_with_label("Only show nodes with descriptions");
-	entry     = gtk_entry_new();
-	swin      = gtk_scrolled_window_new(NULL, NULL);
-	tree_view = create_view_and_model();
-	bbox      = gtk_hbutton_box_new();
-	expand    = gtk_button_new_with_label("Expand");
-	collapse  = gtk_button_new_with_label("Collapse");
+	box          = gtk_vbox_new(FALSE, FALSE);
+	vbox         = gtk_vbox_new(FALSE, FALSE);
+	check1       = gtk_check_button_new_with_label("Search descriptions");
+	check2       = gtk_check_button_new_with_label("Only show nodes with descriptions");
+	entry        = gtk_entry_new();
+	swin         = gtk_scrolled_window_new(NULL, NULL);
+	tree_view    = create_view_and_model();
+	bbox         = gtk_hbutton_box_new();
+	expand_fully = gtk_button_new_with_label("Expand fully");
+	expand       = gtk_button_new_with_label("Expand");
+	collapse     = gtk_button_new_with_label("Collapse");
 
 	gtk_box_pack_start(GTK_BOX(vbox), entry,  FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), check1, FALSE, FALSE, 0);
@@ -217,13 +226,15 @@ create_left_pane(void)
 	gtk_box_pack_start(GTK_BOX(box),  bbox,   FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(swin), tree_view);
 	gtk_container_add(GTK_CONTAINER(bbox), expand);
+	gtk_container_add(GTK_CONTAINER(bbox), expand_fully);
 	gtk_container_add(GTK_CONTAINER(bbox), collapse);
 
-	g_signal_connect(entry,    "changed", G_CALLBACK(cb_entry_changed),                       tree_view);
-	g_signal_connect(expand,   "clicked", G_CALLBACK(cb_expand_clicked),                      NULL);
-	g_signal_connect(collapse, "clicked", G_CALLBACK(cb_collapse_clicked),                    NULL);
-	g_signal_connect(check1,   "toggled", G_CALLBACK(cb_search_descriptions_toggled),         NULL);
-	g_signal_connect(check2,   "toggled", G_CALLBACK(cb_only_show_nodes_with_descrs_toggled), NULL);
+	g_signal_connect(entry,        "changed", G_CALLBACK(cb_entry_changed),                       tree_view);
+	g_signal_connect(expand,       "clicked", G_CALLBACK(cb_expand_clicked),                      NULL);
+	g_signal_connect(expand_fully, "clicked", G_CALLBACK(cb_expand_fully_clicked),                NULL);
+	g_signal_connect(collapse,     "clicked", G_CALLBACK(cb_collapse_clicked),                    NULL);
+	g_signal_connect(check1,       "toggled", G_CALLBACK(cb_search_descriptions_toggled),         NULL);
+	g_signal_connect(check2,       "toggled", G_CALLBACK(cb_only_show_nodes_with_descrs_toggled), NULL);
 
 	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, GTK_STOCK_FIND);
 
@@ -413,15 +424,53 @@ store_descr(void)
 }
 
 static void
+cb_expand_fully_clicked(GtkWidget *widget, gpointer data)
+{
+	GtkTreeSelection	*sel;
+	struct node_expand_arg	 arg = {
+		TRUE,
+		TRUE,
+	};
+
+	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+	gtk_tree_selection_selected_foreach(sel, cb_set_node_expansion, &arg);
+}
+
+static void
 cb_expand_clicked(GtkWidget *widget, gpointer data)
 {
-	printf("expand\n");
+	GtkTreeSelection	*sel;
+	struct node_expand_arg	 arg = {
+		TRUE,
+		FALSE,
+	};
+
+	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+	gtk_tree_selection_selected_foreach(sel, cb_set_node_expansion, &arg);
 }
 
 static void
 cb_collapse_clicked(GtkWidget *widget, gpointer data)
 {
-	printf("collapse\n");
+	GtkTreeSelection	*sel;
+	struct node_expand_arg	 arg = {
+		FALSE,
+		FALSE,
+	};
+
+	sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+	gtk_tree_selection_selected_foreach(sel, cb_set_node_expansion, &arg);
+}
+
+static void
+cb_set_node_expansion(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data)
+{
+	struct node_expand_arg	*arg = data;
+
+	if (arg->do_expand)
+		gtk_tree_view_expand_row(GTK_TREE_VIEW(tree_view), path, arg->expand_all);
+	else
+		gtk_tree_view_collapse_row(GTK_TREE_VIEW(tree_view), path);
 }
 
 static GtkWidget *
@@ -645,22 +694,22 @@ static GtkWidget *
 create_toolbar(void)
 {
 	GtkWidget	*toolbar;
-	GtkToolItem	*save_btn;
 	GtkToolItem	*open_btn;
+	GtkToolItem	*save_btn;
 
 	toolbar = gtk_toolbar_new();
-	save_btn = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
 	open_btn = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
+	save_btn = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
 
 	gtk_toolbar_set_orientation (GTK_TOOLBAR(toolbar), GTK_ORIENTATION_HORIZONTAL);
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 	gtk_toolbar_set_tooltips(GTK_TOOLBAR(toolbar), TRUE);
 
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save_btn, -1);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), open_btn, -1);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save_btn, -1);
 
-	g_signal_connect(GTK_WIDGET(save_btn), "clicked", G_CALLBACK(cb_save_clicked), NULL);
 	g_signal_connect(GTK_WIDGET(open_btn), "clicked", G_CALLBACK(cb_open_clicked), NULL);
+	g_signal_connect(GTK_WIDGET(save_btn), "clicked", G_CALLBACK(cb_save_clicked), NULL);
 
 	return toolbar;
 }
