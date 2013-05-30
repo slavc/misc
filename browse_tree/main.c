@@ -29,61 +29,54 @@ struct node_expand_arg {
 	gboolean	expand_all;
 };
 
-/*
- * "Model" -- the tree, "view" -- the graphical widgets which represent information.
- * display_*() functions  -- update the view with values from the model.
- * get_*() functions   -- retrieve the current value from the view.
- * store_*() functions -- update the model with current value from the view.
- */
-
-static GtkWidget	*create_left_pane(void);
-static GtkWidget	*create_right_pane(void);
-static void		 cb_expand_fully_clicked(GtkWidget *widget, gpointer data);
-static void		 cb_expand_clicked(GtkWidget *widget, gpointer data);
-static void		 cb_collapse_clicked(GtkWidget *widget, gpointer data);
-static GtkWidget	*create_view_and_model(void);
-static void		 cb_save_clicked(GtkWidget *widget, gpointer user_data);
-static void		 cb_entry_changed(GtkWidget *widget, gpointer user_data);
-static gboolean		 cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data);
-static void              cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
-static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
-static void		 display_descr(void);
-static char		*get_descr(void);
-static void		 store_descr(void);
-static void		 display_path(void);
-static GtkWidget	*create_toolbar(void);
-static void		 usage(void);
-static int		 load_file(const char *filename);
-static char		*fmt_node_path(TreeNode *node);
-static void		 chop_space(char *s);
-static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
-static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
-static void		 update_visibility(TreeNode *node, const char *pattern);
-static guint		 push_status(const char *fmt, ...);
-static void		 pop_status(void);
-static void		 update_title(void);
-static const char	*base_name(const char *path);
-static void		 filter_nodes(void);
-static void		 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data);
-static void		 cb_only_show_nodes_with_descrs_toggled(GtkWidget *widget, gpointer data);
-static void		 cb_set_node_expansion(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data);
-
-const char		*program_name;
-
-static GtkWidget	*window;
-static GtkWidget	*tree_view;
-static GtkTreeModel	*tree_model_filter;
-static GtkTreeModel	*tree_model;
-static GtkWidget	*path_entry;
+static char		*current_filename;
+static TreeNode		*current_node;
 static GtkWidget	*descr_view;
+static char		*filter_pattern;
+static int		 only_show_nodes_with_descriptions_enabled;
+static GtkWidget	*path_entry;
+const char		*program_name;
+static int		 search_by_descriptions_enabled;
 static GtkWidget	*statusbar;
 static guint		 statusbar_context_id;
-static int		 search_by_descriptions_enabled;
-static int		 only_show_nodes_with_descriptions_enabled;
+static GtkTreeModel	*tree_model;
+static GtkTreeModel	*tree_model_filter;
+static GtkWidget	*tree_view;
+static GtkWidget	*window;
 
-static char	*current_filename;
-static char	*filter_pattern;
-static TreeNode	*current_node;
+static const char	*base_name(const char *path);
+static void		 cb_collapse_clicked(GtkWidget *widget, gpointer data);
+static gboolean		 cb_descr_view_focus_out(GtkWidget *descr_view, GdkEvent *event, gpointer data);
+static void		 cb_entry_changed(GtkWidget *widget, gpointer user_data);
+static void		 cb_expand_clicked(GtkWidget *widget, gpointer data);
+static void		 cb_expand_fully_clicked(GtkWidget *widget, gpointer data);
+static gboolean		 cb_is_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data);
+static void		 cb_only_show_nodes_with_descrs_toggled(GtkWidget *widget, gpointer data);
+static void		 cb_row_activated(GtkTreeView *view, GtkTreePath *path, GtkTreeViewColumn *col, gpointer data);
+static void		 cb_save_clicked(GtkWidget *widget, gpointer user_data);
+static void		 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data);
+static void		 cb_set_node_expansion(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data);
+static void		 cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
+static void		 chop_space(char *s);
+static GtkWidget	*create_left_pane(void);
+static GtkWidget	*create_right_pane(void);
+static GtkWidget	*create_toolbar(void);
+static GtkWidget	*create_view_and_model(void);
+static GtkWidget	*create_menu_bar(void);
+static void		 display_descr(void);
+static void		 display_path(void);
+static void		 filter_nodes(void);
+static char		*fmt_node_path(TreeNode *node);
+static char		*get_descr(void);
+static int		 load_file(const char *filename);
+static void		 pop_status(void);
+static guint		 push_status(const char *fmt, ...);
+static void		 store_descr(void);
+static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
+static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
+static void		 update_title(void);
+static void		 update_visibility(TreeNode *node, const char *pattern);
+static void		 usage(void);
 
 int
 main(int argc, char **argv)
@@ -93,6 +86,19 @@ main(int argc, char **argv)
 	GtkWidget	*paned;
 	GtkWidget	*left;
 	GtkWidget	*right;
+	GtkWidget	*menu_bar;
+	int		 ch;
+
+	while ((ch = getopt(argc, argv, "h")) != -1) {
+		switch (ch) {
+		case 'h':
+			usage();
+			return 0;
+		case '?':
+			usage();
+			return 1;
+		}
+	}
 
 	program_name = base_name(argv[0]);
 	gtk_init(&argc, &argv);
@@ -107,7 +113,9 @@ main(int argc, char **argv)
 	left = create_left_pane();
 	right = create_right_pane();
 	statusbar = gtk_statusbar_new();
+	menu_bar = create_menu_bar();
 
+	gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(vbox), paned, TRUE, TRUE, 0);
 	gtk_paned_add1(GTK_PANED(paned), left);
@@ -229,16 +237,26 @@ create_left_pane(void)
 	gtk_container_add(GTK_CONTAINER(bbox), expand_fully);
 	gtk_container_add(GTK_CONTAINER(bbox), collapse);
 
-	g_signal_connect(entry,        "changed", G_CALLBACK(cb_entry_changed),                       tree_view);
-	g_signal_connect(expand,       "clicked", G_CALLBACK(cb_expand_clicked),                      NULL);
-	g_signal_connect(expand_fully, "clicked", G_CALLBACK(cb_expand_fully_clicked),                NULL);
-	g_signal_connect(collapse,     "clicked", G_CALLBACK(cb_collapse_clicked),                    NULL);
-	g_signal_connect(check1,       "toggled", G_CALLBACK(cb_search_descriptions_toggled),         NULL);
-	g_signal_connect(check2,       "toggled", G_CALLBACK(cb_only_show_nodes_with_descrs_toggled), NULL);
+	g_signal_connect(entry,        "changed",       G_CALLBACK(cb_entry_changed),                       tree_view);
+	g_signal_connect(expand,       "clicked",       G_CALLBACK(cb_expand_clicked),                      NULL);
+	g_signal_connect(expand_fully, "clicked",       G_CALLBACK(cb_expand_fully_clicked),                NULL);
+	g_signal_connect(collapse,     "clicked",       G_CALLBACK(cb_collapse_clicked),                    NULL);
+	g_signal_connect(check1,       "toggled",       G_CALLBACK(cb_search_descriptions_toggled),         NULL);
+	g_signal_connect(check2,       "toggled",       G_CALLBACK(cb_only_show_nodes_with_descrs_toggled), NULL);
+	g_signal_connect(tree_view,    "row-activated", G_CALLBACK(cb_row_activated),                       NULL);
 
 	gtk_entry_set_icon_from_stock(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, GTK_STOCK_FIND);
 
 	return box;
+}
+
+static void
+cb_row_activated(GtkTreeView *view, GtkTreePath *path, GtkTreeViewColumn *col, gpointer data)
+{
+	if (gtk_tree_view_row_expanded(view, path))
+		gtk_tree_view_collapse_row(view, path);
+	else
+		gtk_tree_view_expand_row(view, path, FALSE);
 }
 
 static void
@@ -684,7 +702,8 @@ cb_open_clicked(GtkWidget *widget, gpointer data)
 	dialog = gtk_file_chooser_dialog_new("Open File", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
 	if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
 		filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
-		load_file(filename);
+		if (load_file(filename) == 0)
+			update_title();
 		g_free(filename);
 	}
 	gtk_widget_destroy(dialog);
@@ -713,3 +732,60 @@ create_toolbar(void)
 
 	return toolbar;
 }
+
+static void
+cb_about_item_activate(void)
+{
+	GtkWidget	*dialog;
+
+	dialog = gtk_about_dialog_new();
+	gtk_about_dialog_set_program_name(GTK_ABOUT_DIALOG(dialog), program_name);
+	gtk_about_dialog_set_comments(GTK_ABOUT_DIALOG(dialog), "This program loads and displays a tree from a file. "
+		"The tree must be specified in dot notation, one node per line, similar to sysctls. "
+		"You can browse and search the tree, as well as leave notes about particular nodes.");
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
+}
+
+static GtkWidget *
+create_menu_bar(void)
+{
+	GtkWidget	*menu_bar;
+	GtkWidget	*file_menu;
+	GtkWidget	*help_menu;
+	GtkWidget	*file_item;
+	GtkWidget	*help_item;
+	GtkWidget	*open_item;
+	GtkWidget	*save_item;
+	GtkWidget	*quit_item;
+	GtkWidget	*about_item;
+
+	menu_bar = gtk_menu_bar_new();
+
+	file_menu = gtk_menu_new();
+	open_item = gtk_menu_item_new_with_label("Open");
+	save_item = gtk_menu_item_new_with_label("Save");
+	quit_item = gtk_menu_item_new_with_label("Quit");
+	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), open_item);
+	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), save_item);
+	gtk_menu_shell_append(GTK_MENU_SHELL(file_menu), quit_item);
+	file_item = gtk_menu_item_new_with_label("File");
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_item), file_menu);
+	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), file_item);
+
+	help_menu = gtk_menu_new();
+	about_item = gtk_menu_item_new_with_label("About");
+	gtk_menu_shell_append(GTK_MENU_SHELL(help_menu), about_item);
+	help_item = gtk_menu_item_new_with_label("Help");
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(help_item), help_menu);
+	gtk_menu_bar_append(GTK_MENU_BAR(menu_bar), help_item);
+
+	g_signal_connect(open_item, "activate", G_CALLBACK(cb_open_clicked), NULL);
+	g_signal_connect(save_item, "activate", G_CALLBACK(cb_save_clicked), NULL);
+	g_signal_connect(quit_item, "activate", G_CALLBACK(gtk_main_quit), NULL);
+
+	g_signal_connect(about_item, "activate", G_CALLBACK(cb_about_item_activate), NULL);
+
+	return menu_bar;
+}
+
