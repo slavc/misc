@@ -27,6 +27,33 @@
 #define PREALLOC_SIZE	127
 
 char *
+str_append(char *s, const char *fmt, ...)
+{
+	size_t	 len;
+	size_t	 size;
+	int	 n;
+	va_list	 ap;
+
+	if (s == NULL)
+		len = 0;
+	else
+		len = strlen(s);
+	n = PREALLOC_SIZE;
+	do {
+		size = len + n + 1;
+		s = xrealloc(s, size);
+		va_start(ap, fmt);
+		n = vsnprintf(s + len, size - len, fmt, ap);
+		va_end(ap);
+	} while (n >= (size - len));
+
+	if (n < PREALLOC_SIZE)
+		s = xrealloc(s, len + n + 1);
+
+	return s;
+}
+
+char *
 str_prepend(char *s, const char *fmt, ...)
 {
 	int		 n = 0;
@@ -74,19 +101,3 @@ str_is_space(const char *s)
 		return 0;
 }
 
-#ifdef TEST_STR
-int
-main(int argc, char **argv)
-{
-	char	*s = NULL;
-
-	s = str_prepend(s, "%s", "sys");
-	s = str_prepend(s, "%s.", "ctl");
-	s = str_prepend(s, "%s.", "abc");
-
-	if (strcmp(s, "abc.ctl.sys") == 0)
-		return 0;
-	else
-		errx(1, "str_prepend unittests failed");
-}
-#endif
