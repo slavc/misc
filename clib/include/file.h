@@ -19,6 +19,26 @@
 
 #include <stdio.h>
 
+enum file_types {
+	FILE_TYPE_NORMAL,
+	FILE_TYPE_GZ,
+};
+
+typedef struct {
+	enum	 type;
+	union {
+		FILE	*fp;
+		gzFile	 fgz;
+	} f;
+} *file_t;
+
+file_t	 f_open(const char *path, const char *mode);
+ssize_t	 f_read(file_t f, char *buf, ssize_t len);
+char	*f_gets(file_t f);
+void	 f_close(file_t f);
+
+
+#if 0
 /**
  * Load a file into memory.
  *
@@ -36,5 +56,6 @@ char    *f_load(int fd);
  * @return dynamically allocated buffer with the line or NULL if EOF. Newline character is retained.
  */
 char	*fp_gets(FILE *fp);
+#endif
 
 #endif

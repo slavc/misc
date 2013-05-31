@@ -19,11 +19,53 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <zlib.h>
+#include <strings.h>
 
+#include <file.h>
 #include <xmem.h>
 
+
+
+file_t
+f_open(const char *path, const char *mode)
+{
+	file_t		 f = NULL;
+	const char	*p;
+
+	f = xmalloc(sizeof(*f));
+	p = strrchr(path, '.');
+	if (p != NULL && !strcasecmp(p + 1, "gz")) {
+		f->type = FILE_TYPE_GZ;
+		f->f.fgz = gzopen(path, mode);
+		if (f->f.fgz == NULL)
+			goto fail;
+	} else {
+		f->type = FILE_TYPE_NORMAL;
+		f->f.fp = fopen(path, mode);
+		if (f->f.fp == NULL)
+			goto fail;
+	}
+
+	return f;
+
+fail:
+	xfree(f);
+	return NULL;
+}
+
+ssize_t
+f_read(file_t f, char *buf, ssize_t len)
+{
+	/* TODO */
+	return 0;
+}
+
+#if 0
+char *f_gets(file_t f);
+
 char *
-f_load(int fd)
+fd_load(int fd)
 {
 	char		*buf;
 	size_t		 bufsize;
@@ -80,6 +122,12 @@ fp_gets(FILE *fp)
 		i = bufsize - 1;
 	}
 }
+
+char *
+fz_gets(gzFile f)
+{
+}
+#endif
 
 #ifdef TEST_F_LOAD
 #include <sys/types.h>
