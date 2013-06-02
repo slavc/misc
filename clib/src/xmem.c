@@ -64,9 +64,10 @@ char *
 xstrdup(const char *s)
 {
 	char	*p;
+	size_t	 size;
 
-	p = strdup(s);
-	if (s == NULL)
-		err(1, "strdup");
+	size = strlen(s) + 1;
+	p = xmalloc(size);
+	memcpy(p, s, size);
 	return p;
 }
