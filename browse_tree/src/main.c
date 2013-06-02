@@ -23,7 +23,6 @@
 #include "file.h"
 
 #define DELIM		"."
-#define MAX_LINE	8192
 
 struct node_expand_arg {
 	gboolean	do_expand;
@@ -60,10 +59,10 @@ static void		 cb_set_node_expansion(GtkTreeModel *model, GtkTreePath *path, GtkT
 static void		 cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
 static void		 chop_space(char *s);
 static GtkWidget	*create_left_pane(void);
+static GtkWidget	*create_menu_bar(void);
 static GtkWidget	*create_right_pane(void);
 static GtkWidget	*create_toolbar(void);
 static GtkWidget	*create_view_and_model(void);
-static GtkWidget	*create_menu_bar(void);
 static void		 display_descr(void);
 static void		 display_path(void);
 static void		 filter_nodes(void);
@@ -72,13 +71,13 @@ static char		*get_descr(void);
 static int		 load_file(const char *filename);
 static void		 pop_status(void);
 static guint		 push_status(const char *fmt, ...);
+static int		 save_file(const char *filename);
 static void		 store_descr(void);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_title(void);
 static void		 update_visibility(TreeNode *node, const char *pattern);
 static void		 usage(void);
-static int		 save_file(const char *filename);
 
 int
 main(int argc, char **argv)
@@ -579,8 +578,6 @@ static int
 save_file(const char *filename)
 {
 	f_file_t	 f;
-
-	g_print("%s()\n", __func__);
 
 	f = f_open(filename, "w");
 	if (f == NULL)
