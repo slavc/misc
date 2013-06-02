@@ -15,22 +15,32 @@
  */
 
 #include <err.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 #include <stdio.h>
-#include <zlib.h>
+#include <stdlib.h>
+#include <string.h>
 #include <strings.h>
+#include <unistd.h>
+#include <zlib.h>
 
 #include <file.h>
 #include <xmem.h>
+#include <str.h>
 
+#define READ_BUF_SIZE	4096
+#define INVALID_FILE_ARGUMENT() \
+	do { \
+		fprintf(stderr, "%s(): invalid file argument", __func__); \
+		abort(); \
+	} while(0)
+#define DBG(fmt, ...)
 
+static char	*fgz_gets(gzFile f);
+static char	*fp_gets(FILE *fp);
 
-file_t
+f_file_t
 f_open(const char *path, const char *mode)
 {
-	file_t		 f = NULL;
+	f_file_t	 f = NULL;
 	const char	*p;
 
 	f = xmalloc(sizeof(*f));
@@ -55,15 +65,113 @@ fail:
 }
 
 ssize_t
-f_read(file_t f, char *buf, ssize_t len)
+f_read(f_file_t f, char *buf, ssize_t len)
 {
-	/* TODO */
-	return 0;
+	if (f->type == FILE_TYPE_NORMAL)
+		return fread(buf, sizeof(*buf), len, f->f.fp);
+	else if (f->type == FILE_TYPE_GZ)
+		return gzread(f->f.fgz, buf, len);
+	INVALID_FILE_ARGUMENT();
+}
+
+ssize_t
+f_write(f_file_t f, const char *buf, ssize_t len)
+{
+	if (f->type == FILE_TYPE_NORMAL)
+		return fwrite(buf, len, sizeof(*buf), f->f.fp);
+	else if (f->type == FILE_TYPE_GZ)
+		return gzwrite(f->f.fgz, buf, len);
+	INVALID_FILE_ARGUMENT();
+}
+
+char *
+f_gets(f_file_t f)
+{
+	if (f->type == FILE_TYPE_NORMAL)
+		return fp_gets(f->f.fp);
+	else if (f->type == FILE_TYPE_GZ)
+		return fgz_gets(f->f.fgz);
+	INVALID_FILE_ARGUMENT();
+}
+
+void
+f_close(f_file_t f)
+{
+	if (f->type == FILE_TYPE_NORMAL)
+		fclose(f->f.fp);
+	else if (f->type == FILE_TYPE_GZ)
+		gzclose(f->f.fgz);
+	INVALID_FILE_ARGUMENT();
+}
+
+static char *
+fgz_gets(gzFile f)
+{
+	static char		 buf[READ_BUF_SIZE];
+	const size_t		 bufsize = sizeof buf;
+	static char		*nl = NULL;
+	char			*next_nl;
+	int			 nread;
+	char			*line = NULL;
+
+	if (nl != NULL) {
+		next_nl = strchr(nl + 1, '\n');
+		if (next_nl != NULL)
+			*next_nl = '\0';
+		line = str_append(line, "%s", nl + 1);
+		if (next_nl != NULL) {
+			nl = next_nl;
+			return line;
+		}
+		nl = NULL;
+	}
+	do {
+		nread = gzread(f, buf, bufsize - 1);
+		if (nread <= 0)
+			break;
+		buf[nread] = '\0';
+		DBG("buf=``%s''\n", buf);
+		nl = strchr(buf, '\n');
+		if (nl != NULL)
+			*nl = '\0';
+		line = str_append(line, "%s", buf);
+		if (nl != NULL)
+			break;
+		if (nread < (bufsize - 1))
+			break;
+	} while (1);
+
+	return line;
+}
+
+static char *
+fp_gets(FILE *fp)
+{
+	const size_t	 chunksize = READ_BUF_SIZE;
+	char		*buf = NULL;
+	size_t		 bufsize;
+	size_t		 i;
+
+	i = bufsize = 0;
+	for ( ;; ) {
+		bufsize += chunksize;
+		buf = xrealloc(buf, bufsize);
+		if (fgets(buf + i, bufsize - i, fp) == NULL) {
+			if (i == 0) {
+				xfree(buf);
+				return NULL;
+			} else {
+				buf = xrealloc(buf, strlen(buf) + 1);
+				return buf;
+			}
+		}
+		if (strchr(buf + i, '\n') != NULL)
+			return buf;
+		i = bufsize - 1;
+	}
 }
 
 #if 0
-char *f_gets(file_t f);
-
 char *
 fd_load(int fd)
 {
@@ -90,97 +198,5 @@ fd_load(int fd)
 	buf = xrealloc(buf, bufsize);
 	buf[bufsize - 1] = '\0';
 	return buf;
-}
-
-char *
-fp_gets(FILE *fp)
-{
-	/* FIXME
-	 * Examine popular libc implementations to determine 
-	 * the optimal value for chunksize.
-	 */
-	const size_t	 chunksize = 512;
-	char		*buf = NULL;
-	size_t		 bufsize;
-	size_t		 i;
-
-	i = bufsize = 0;
-	for ( ;; ) {
-		bufsize += chunksize;
-		buf = xrealloc(buf, bufsize);
-		if (fgets(buf + i, bufsize - i, fp) == NULL) {
-			if (i == 0) {
-				xfree(buf);
-				return NULL;
-			} else {
-				buf = xrealloc(buf, strlen(buf) + 1);
-				return buf;
-			}
-		}
-		if (strchr(buf + i, '\n') != NULL)
-			return buf;
-		i = bufsize - 1;
-	}
-}
-
-char *
-fz_gets(gzFile f)
-{
-}
-#endif
-
-#ifdef TEST_F_LOAD
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <fcntl.h>
-#include <stdio.h>
-
-int
-main(int argc, char **argv)
-{
-	int	 fd;
-	char	*buf;
-
-	while (++argv, --argc) {
-		fd = open(*argv, O_RDONLY);
-		if (fd == -1) {
-			warn("%s", *argv);
-			continue;
-		}
-		buf = f_load(fd);
-		close(fd);
-		printf("%s:\n\"%s\"\n", *argv, buf);
-                xfree(buf);
-	}
-
-        return 0;
-}
-#endif
-
-#ifdef TEST_FP_GETS
-#include <stdio.h>
-#include <string.h>
-
-int
-main(int argc, char **argv)
-{
-	FILE	*fp;
-	char	*buf;
-
-	while (++argv, --argc) {
-		fp = fopen(*argv, "r");
-		if (fp == NULL) {
-			warn("%s", *argv);
-			continue;
-		}
-		while ((buf = fp_gets(fp)) != NULL) {
-			printf("%s", buf);
-			xfree(buf);
-		}
-		fclose(fp);
-	}
-
-        return 0;
 }
 #endif

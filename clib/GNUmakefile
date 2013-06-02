@@ -3,6 +3,7 @@ CC=cc
 CFLAGS+=-Iinclude
 CFLAGS+=-Wall
 CFLAGS+=-O2
+CFLAGS+=-std=c99
 
 all: lib/ lib/libclib.a
 

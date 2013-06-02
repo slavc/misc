@@ -24,38 +24,27 @@ enum file_types {
 	FILE_TYPE_GZ,
 };
 
-typedef struct {
-	enum	 type;
+struct f_file;
+typedef struct f_file *f_file_t;
+struct f_file {
+	enum file_types	 type;
 	union {
 		FILE	*fp;
 		gzFile	 fgz;
 	} f;
-} *file_t;
-
-file_t	 f_open(const char *path, const char *mode);
-ssize_t	 f_read(file_t f, char *buf, ssize_t len);
-char	*f_gets(file_t f);
-void	 f_close(file_t f);
-
-
-#if 0
-/**
- * Load a file into memory.
- *
- * @param fd file descriptor.
- *
- * @return malloc()ed buffer with file's content.
- */
-char    *f_load(int fd);
+};
 
 /**
- * Read a line from file.
+ * Open a file.
  *
- * @param fp file to read from.
+ * Opens a file and returns a file object.
  *
- * @return dynamically allocated buffer with the line or NULL if EOF. Newline character is retained.
+ * @returns A file object if successful, NULL otherwise.
  */
-char	*fp_gets(FILE *fp);
-#endif
+f_file_t	 f_open(const char *path, const char *mode);
+ssize_t		 f_read(f_file_t f, char *buf, ssize_t len);
+ssize_t		 f_write(f_file_t f, const char *buf, ssize_t len);
+char		*f_gets(f_file_t f);
+void		 f_close(f_file_t f);
 
 #endif
