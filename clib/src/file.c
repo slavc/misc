@@ -101,7 +101,9 @@ f_close(f_file_t f)
 		fclose(f->f.fp);
 	else if (f->type == FILE_TYPE_GZ)
 		gzclose(f->f.fgz);
-	INVALID_FILE_ARGUMENT();
+        else {
+            INVALID_FILE_ARGUMENT();
+        }
 }
 
 static char *
