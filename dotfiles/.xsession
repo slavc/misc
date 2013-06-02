@@ -1,7 +1,7 @@
 pgrep gnome-settings-daemon >/dev/null || /usr/libexec/gnome-settings-daemon &
 
 {
-    sleep 4
+    sleep 6
     pulseaudio --start &
     xset dpms 0 0 600
     xrdb -merge ~/.Xresources.local
@@ -10,7 +10,7 @@ pgrep gnome-settings-daemon >/dev/null || /usr/libexec/gnome-settings-daemon &
     xset r rate 400 50
     xmodmap ~/.Xmodmap
     sleep 2
-    xsetbg -screen all -fill ~/Misc/wallpapers/HigashiOsaka.jpg    
+    xsetbg -screen all -fill ~/Misc/wallpapers/city-hazy-blurred-unsharp-night-rain-1920x1080.jpg
 } &
 
 eval `ssh-agent`
