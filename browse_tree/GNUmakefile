@@ -12,3 +12,4 @@ clib/lib/libclib.a:
 
 clean:
 	rm -f *.o browse_tree
+	$(MAKE) -C clib clean

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <libgen.h>
+#include <zlib.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -77,6 +78,7 @@ static void		 tree_set_flags(TreeNode *node, enum TreeNodeFlags flags);
 static void		 update_title(void);
 static void		 update_visibility(TreeNode *node, const char *pattern);
 static void		 usage(void);
+static int		 save_file(const char *filename);
 
 int
 main(int argc, char **argv)
@@ -284,7 +286,7 @@ create_tree_model(GtkTreeModel **model, GtkTreeModel **model_filter)
 static int
 load_file(const char *filename)
 {
-	FILE		*fp;
+	f_file_t	 f;
 	char		*buf;
 	char		*path;
 	char		*descr;
@@ -292,13 +294,13 @@ load_file(const char *filename)
 	TreeNode	*parent;
 	TreeNode	*child;
 
-	fp = fopen(filename, "r");
-	if (fp == NULL)
+	f = f_open(filename, "r");
+	if (f == NULL)
 		return -1;
 	current_node = NULL;
 	push_status("Loading %s...", base_name(filename));
 	create_tree_model(&tree_model, &tree_model_filter);
-	while ((buf = fp_gets(fp)) != NULL) {
+	while ((buf = f_gets(f)) != NULL) {
 		chop_space(buf);
 		if (*buf == '\0') /* skip empty lines */
 			continue;
@@ -320,9 +322,9 @@ load_file(const char *filename)
 			else
 				child->descr = NULL;
 		}
-		free(buf);
+		xfree(buf);
 	}
-	fclose(fp);
+	f_close(f);
 	tree_set_parents(TREE(tree_model)->root);
 	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(tree_model_filter));
 	gtk_tree_view_set_model(GTK_TREE_VIEW(tree_view), GTK_TREE_MODEL(tree_model_filter));
@@ -556,35 +558,35 @@ fmt_node_path(TreeNode *node)
 static int
 cb_write_node_to_file(TreeNode *node, void *data)
 {
-	FILE	*fp = data;
-	char	*path;
-	char	*descr;
+	f_file_t	 f = data;
+	char		*path = NULL;
+	char		*descr = NULL;
 
 	path = fmt_node_path(node);
-	fprintf(fp, "%s", path);
-	xfree(path);
-	if (node->descr == NULL) {
-		fputc('\n', fp);
-	} else {
+	f_write(f, path, strlen(path));
+	if (node->descr != NULL) {
 		descr = descr_encode(node->descr);
-		fprintf(fp, " %s\n", descr);
-		xfree(descr);
+		f_write(f, " ", 1);
+		f_write(f, descr, strlen(descr));
 	}
+	f_write(f, "\n", 1);
+	xfree(path);
+	xfree(descr);
 	return 0;
 }
 
 static int
 save_file(const char *filename)
 {
-	FILE	*fp;
+	f_file_t	 f;
 
 	g_print("%s()\n", __func__);
 
-	fp = fopen(filename, "w");
-	if (fp == NULL)
+	f = f_open(filename, "w");
+	if (f == NULL)
 		return -1;
-	tree_foreach_leaf(TREE(tree_model), cb_write_node_to_file, fp);
-	fclose(fp);
+	tree_foreach_leaf(TREE(tree_model), cb_write_node_to_file, f);
+	f_close(f);
 	return 0;
 }
 

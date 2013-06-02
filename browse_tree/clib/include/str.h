@@ -18,6 +18,16 @@
 #define CLIB_STR_H
 
 /**
+ * Append `s' with a string formatted from `fmt' and va_args.
+ *
+ * @parameter s pointer to a dynamically allocated string or NULL.
+ * @paratmer  fmt format string.
+ *
+ * @return pointer to reallocated `s'.
+ */
+char	*str_append(char *s, const char *fmt, ...);
+
+/**
  * Prepend `s' with a string formatted from `fmt' and va_args.
  *
  * @parameter s pointer to a dynamically allocated string or NULL.
