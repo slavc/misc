@@ -43,6 +43,7 @@ static GtkTreeModel	*tree_model;
 static GtkTreeModel	*tree_model_filter;
 static GtkWidget	*tree_view;
 static GtkWidget	*window;
+static int		 unsaved_changes_exist;
 
 static const char	*base_name(const char *path);
 static void		 cb_collapse_clicked(GtkWidget *widget, gpointer data);
@@ -57,6 +58,8 @@ static void		 cb_save_clicked(GtkWidget *widget, gpointer user_data);
 static void		 cb_search_descriptions_toggled(GtkWidget *widget, gpointer data);
 static void		 cb_set_node_expansion(GtkTreeModel *model, GtkTreePath *path, GtkTreeIter *iter, gpointer data);
 static void		 cb_tree_selection_changed(GtkTreeSelection *sel, gpointer data);
+static gboolean		 cb_window_delete(GtkWidget *widget, GdkEvent *event, gpointer data);
+static void		 cb_window_destroy(GtkWidget *widget, gpointer data);
 static void		 chop_space(char *s);
 static GtkWidget	*create_left_pane(void);
 static GtkWidget	*create_menu_bar(void);
@@ -106,7 +109,8 @@ main(int argc, char **argv)
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(GTK_WINDOW(window), 640, 480);
-	g_signal_connect(window, "delete_event", gtk_main_quit, NULL);
+	g_signal_connect(window, "delete_event", G_CALLBACK(cb_window_delete), NULL);
+	g_signal_connect(window, "destroy", G_CALLBACK(cb_window_destroy), NULL);
 
 	vbox = gtk_vbox_new(FALSE, 0);
 	toolbar = create_toolbar();
@@ -138,6 +142,29 @@ main(int argc, char **argv)
 	gtk_main();
 
 	return 0;
+}
+
+static gboolean
+cb_window_delete(GtkWidget *widget, GdkEvent *event, gpointer data)
+{
+	GtkWidget	*dialog;
+	gint		 response;
+
+	store_descr();
+	if (unsaved_changes_exist) {
+		dialog = gtk_dialog_new_with_buttons("Save changes?", GTK_WINDOW(window), GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT, GTK_STOCK_YES, GTK_RESPONSE_ACCEPT, GTK_STOCK_NO, GTK_RESPONSE_REJECT, NULL);
+		response = gtk_dialog_run(GTK_DIALOG(dialog));
+		if (response == GTK_RESPONSE_ACCEPT)
+			cb_save_clicked(NULL, NULL);
+	}
+	
+	return FALSE;
+}
+
+static void
+cb_window_destroy(GtkWidget *widget, gpointer data)
+{
+	gtk_main_quit();
 }
 
 static const char *
@@ -293,6 +320,7 @@ load_file(const char *filename)
 	TreeNode	*parent;
 	TreeNode	*child;
 
+	unsaved_changes_exist = 0;
 	f = f_open(filename, "r");
 	if (f == NULL)
 		return -1;
@@ -342,19 +370,26 @@ static GtkWidget *
 create_right_pane(void)
 {
 	GtkWidget	*box;
+	GtkWidget	*hbox1;
+	GtkWidget	*hbox2;
 	GtkWidget	*lblpath;
 	GtkWidget	*lbldescr;
 
 	box        = gtk_vbox_new(FALSE, 0);
+	hbox1      = gtk_hbox_new(FALSE, 0);
+	hbox2      = gtk_hbox_new(FALSE, 0);
 	lblpath    = gtk_label_new("Path");
 	path_entry = gtk_entry_new();
 	lbldescr   = gtk_label_new("Description");
 	descr_view = gtk_text_view_new();
 
-	gtk_box_pack_start(GTK_BOX(box), lblpath,    FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox1), lblpath, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox2), lbldescr, FALSE, FALSE, 0);
+
+	gtk_box_pack_start(GTK_BOX(box), hbox1, FALSE, FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(box), path_entry, FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), lbldescr,   FALSE, FALSE, 0);
-	gtk_box_pack_start(GTK_BOX(box), descr_view, TRUE,  TRUE,  0);
+	gtk_box_pack_start(GTK_BOX(box), hbox2, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(box), descr_view, TRUE, TRUE,  0);
 
 	g_signal_connect(descr_view, "focus-out-event", G_CALLBACK(cb_descr_view_focus_out), NULL);
 
@@ -438,6 +473,8 @@ store_descr(void)
 	if (current_node == NULL)
 		return;
 	descr = get_descr();
+	if ((descr != NULL && current_node->descr != NULL && strcmp(descr, current_node->descr) != 0) || ((descr == NULL) ^ (current_node->descr == NULL)))
+		unsaved_changes_exist = 1;
 	xfree(current_node->descr);
 	current_node->descr = descr;
 }
@@ -589,7 +626,7 @@ save_file(const char *filename)
 }
 
 static void
-cb_save_clicked(GtkWidget *widget, gpointer user_data)
+cb_save_clicked(GtkWidget *unused1, gpointer unused2)
 {
 	GtkWidget	*dialog;
 	char		*filename;

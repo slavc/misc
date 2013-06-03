@@ -650,3 +650,4 @@ tree_foreach_leaf(Tree *tree, tree_walker_func_t cb, void *data)
 {
 	return foreach_leaf(tree->root, cb, data);
 }
+
