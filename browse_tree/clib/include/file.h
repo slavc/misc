@@ -34,13 +34,6 @@ struct f_file {
 	} f;
 };
 
-/**
- * Open a file.
- *
- * Opens a file and returns a file object.
- *
- * @returns A file object if successful, NULL otherwise.
- */
 f_file_t	 f_open(const char *path, const char *mode);
 ssize_t		 f_read(f_file_t f, char *buf, ssize_t len);
 ssize_t		 f_write(f_file_t f, const char *buf, ssize_t len);
