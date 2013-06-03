@@ -37,8 +37,6 @@ static int		 only_show_nodes_with_descriptions_enabled;
 static GtkWidget	*path_entry;
 const char		*program_name;
 static int		 search_by_descriptions_enabled;
-static GtkWidget	*statusbar;
-static guint		 statusbar_context_id;
 static GtkTreeModel	*tree_model;
 static GtkTreeModel	*tree_model_filter;
 static GtkWidget	*tree_view;
@@ -72,8 +70,6 @@ static void		 filter_nodes(void);
 static char		*fmt_node_path(TreeNode *node);
 static char		*get_descr(void);
 static int		 load_file(const char *filename);
-static void		 pop_status(void);
-static guint		 push_status(const char *fmt, ...);
 static int		 save_file(const char *filename);
 static void		 store_descr(void);
 static void		 tree_clear_flags(TreeNode *node, enum TreeNodeFlags flags);
@@ -117,7 +113,6 @@ main(int argc, char **argv)
 	paned = gtk_hpaned_new();
 	left = create_left_pane();
 	right = create_right_pane();
-	statusbar = gtk_statusbar_new();
 	menu_bar = create_menu_bar();
 
 	gtk_box_pack_start(GTK_BOX(vbox), menu_bar, FALSE, FALSE, 0);
@@ -126,11 +121,8 @@ main(int argc, char **argv)
 	gtk_paned_add1(GTK_PANED(paned), left);
 	gtk_paned_add2(GTK_PANED(paned), right);
 	gtk_container_add(GTK_CONTAINER(window), vbox);
-	gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, FALSE, 0);
 
 	gtk_widget_show_all(window);
-
-	push_status("Idle");
 
 	if (argc > 1) {
 		if (load_file(argv[1]) != 0)
@@ -192,34 +184,6 @@ update_title(void)
 		else
 			warn("snprintf");
 	}
-}
-
-static guint
-push_status(const char *fmt, ...)
-{
-	static const gchar	*context_name = NULL;
-	va_list			 ap;
-	int			 rc;
-	char			 buf[2048];
-
-	if (context_name == NULL) {
-		context_name = "default_context";
-		statusbar_context_id = gtk_statusbar_get_context_id(GTK_STATUSBAR(statusbar), context_name);
-	}
-
-	va_start(ap, fmt);
-	rc = vsnprintf(buf, sizeof buf, fmt, ap);
-	va_end(ap);
-	if (rc < 0)
-		return 0;
-	else
-		return gtk_statusbar_push(GTK_STATUSBAR(statusbar), statusbar_context_id, buf);
-}
-
-static void
-pop_status(void)
-{
-	gtk_statusbar_pop(GTK_STATUSBAR(statusbar), statusbar_context_id);
 }
 
 static void
@@ -325,7 +289,6 @@ load_file(const char *filename)
 	if (f == NULL)
 		return -1;
 	current_node = NULL;
-	push_status("Loading %s...", base_name(filename));
 	create_tree_model(&tree_model, &tree_model_filter);
 	while ((buf = f_gets(f)) != NULL) {
 		chop_space(buf);
@@ -360,8 +323,6 @@ load_file(const char *filename)
 
 	free(current_filename);
 	current_filename = xstrdup(filename);
-
-	pop_status();
 
 	return 0;
 }
@@ -660,11 +621,9 @@ cb_entry_changed(GtkWidget *widget, gpointer data)
 static void
 filter_nodes(void)
 {
-	push_status("Searching...");
 	tree_clear_flags(TREE(tree_model)->root, ~0);
 	update_visibility(TREE(tree_model)->root, filter_pattern);
 	gtk_tree_model_filter_refilter(GTK_TREE_MODEL_FILTER(tree_model_filter));
-	pop_status();
 }
 
 static void
@@ -825,5 +784,4 @@ create_menu_bar(void)
 
 	return menu_bar;
 }
-
 
