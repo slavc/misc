@@ -554,10 +554,11 @@ fmt_node_path(TreeNode *node)
 	return s;
 }
 
-static int
-cb_write_node_to_file(TreeNode *node, void *data)
+static gboolean
+cb_write_node_to_file(GtkTreeModel *model, GtkTreePath *treepath, GtkTreeIter *iter, gpointer data)
 {
 	f_file_t	 f = data;
+	TreeNode	*node = iter->user_data;
 	char		*path = NULL;
 	char		*descr = NULL;
 
@@ -571,7 +572,7 @@ cb_write_node_to_file(TreeNode *node, void *data)
 	f_write(f, "\n", 1);
 	xfree(path);
 	xfree(descr);
-	return 0;
+	return FALSE;
 }
 
 static int
@@ -582,7 +583,7 @@ save_file(const char *filename)
 	f = f_open(filename, "w");
 	if (f == NULL)
 		return -1;
-	tree_foreach_leaf(TREE(tree_model), cb_write_node_to_file, f);
+	gtk_tree_model_foreach(GTK_TREE_MODEL(tree_model), cb_write_node_to_file, f);
 	f_close(f);
 	return 0;
 }
@@ -787,4 +788,5 @@ create_menu_bar(void)
 
 	return menu_bar;
 }
+
 
