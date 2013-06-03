@@ -22,6 +22,7 @@
  */
 
 #include <stdio.h>
+#include <zlib.h>
 
 enum file_types {
 	FILE_TYPE_NORMAL,
