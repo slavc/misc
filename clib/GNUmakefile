@@ -19,5 +19,13 @@ test: lib/ test/test
 test/test: test/test.o lib/libclib.a
 	$(CC) -o $@ $^
 
+doc: doc/ doc/html/
+
+doc/:
+	mkdir -p $@
+
+doc/html/: doxy.cfg
+	doxygen doxy.cfg
+
 clean:
-	rm -rf lib/ src/*.o test/*.o test/test
+	rm -rf lib/ src/*.o test/*.o test/test doc/
