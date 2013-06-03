@@ -3,7 +3,7 @@
 # Open file(s) in the appropriate program.
 
 function op_file() {
-    type="$1"
+    type=$(echo "$1" | tr '[A-Z]' '[a-z]')
     path="$2"
 
     case "$type" in
@@ -19,7 +19,7 @@ function op_file() {
         firefox "$path" > /dev/null 2>&1 &
         disown
         ;;
-    odt)
+    odt|doc|xls)
         ooffice "$path" > /dev/null 2>&1 &
         disown
         ;;
