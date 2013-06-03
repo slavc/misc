@@ -593,7 +593,6 @@ cb_save_clicked(GtkWidget *unused1, gpointer unused2)
 	char		*filename;
 
 	store_descr();
-
 	if (current_filename == NULL) {
 		dialog = gtk_file_chooser_dialog_new("Save File", GTK_WINDOW(window), GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
 		if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
@@ -602,10 +601,12 @@ cb_save_clicked(GtkWidget *unused1, gpointer unused2)
 			xfree(current_filename);
 			current_filename = xstrdup(filename);
 			g_free(filename);
+			unsaved_changes_exist = 0;
 		}
 		gtk_widget_destroy(dialog);
 	} else {
 		save_file(current_filename);
+		unsaved_changes_exist = 0;
 	}
 }
 
