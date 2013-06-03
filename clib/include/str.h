@@ -38,7 +38,9 @@ char	*str_append(char *s, const char *fmt, ...);
 char	*str_prepend(char *s, const char *fmt, ...);
 
 /**
- * Return non-zero if string only consists of isspace(3) chars.
+ * Check is string consists only of space characters.
+ *
+ * @return non-zero if string only consists of isspace(3) chars.
  */
 int	 str_is_space(const char *s);
 

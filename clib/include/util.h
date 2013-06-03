@@ -17,6 +17,9 @@
 #ifndef CLIB_UTIL_H
 #define CLIB_UTIL_H
 
+/**
+ * @return Number of elements in an array.
+ */
 #define NELEMS(array) (sizeof(array)/sizeof(*(array)))
 
 #endif

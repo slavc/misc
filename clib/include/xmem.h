@@ -17,6 +17,15 @@
 #ifndef CLIB_XMEM_H
 #define CLIB_XMEM_H
 
+/**
+ * All of these functions act indentical to their non-x counterparts
+ * in the standard library, but these functions call err() if they fail
+ * to re/alloc memory.
+ * The result is that we can use them without checking that they didn't return
+ * a NULL, because it is seldom when an ordinary program can really recover
+ * from such an error.
+ */
+
 void	*xmalloc(size_t);
 void	*xcalloc(size_t, size_t);
 void	*xrealloc(void *, size_t);
