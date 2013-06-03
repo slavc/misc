@@ -17,6 +17,10 @@
 #ifndef CLIB_FILE_H
 #define CLIB_FILE_H
 
+/**
+ * File operations.
+ */
+
 #include <stdio.h>
 
 enum file_types {
@@ -39,12 +43,49 @@ struct f_file {
  *
  * Opens a file and returns a file object.
  *
- * @returns A file object if successful, NULL otherwise.
+ * @param path path to the file.
+ * @param mode access mode with which to open the file.
+ *
+ * @return A file object if successful, NULL otherwise.
  */
 f_file_t	 f_open(const char *path, const char *mode);
+
+/**
+ * Read from a file.
+ *
+ * @param f file from which to read.
+ * @param buf pointer to a buffer where to store the bytes read.
+ * @param len how many bytes to read.
+ *
+ * @return Number of bytes read.
+ */
 ssize_t		 f_read(f_file_t f, char *buf, ssize_t len);
+
+/**
+ * Write to a file.
+ *
+ * @param f file to which to write.
+ * @param buf pointer to a buffer which contains the data to be written.
+ * @param len how many bytes to write.
+ *
+ * @return Number of bytes written.
+ */
 ssize_t		 f_write(f_file_t f, const char *buf, ssize_t len);
+
+/**
+ * Read a line from a file.
+ *
+ * @param f file from which to read.
+ *
+ * @return A dynamically allocated buffer which contains a single line from the file.
+ */
 char		*f_gets(f_file_t f);
+
+/**
+ * Close a file.
+ *
+ * @param f file which to close.
+ */
 void		 f_close(f_file_t f);
 
 #endif
