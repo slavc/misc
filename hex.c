@@ -39,6 +39,7 @@ static unsigned long long	 read_num(const char *, int, const char *);
 static void			 usage(void);
 static int			 digit2int(char);
 static void			 print_bin(unsigned long long);
+static void			 print_chr(unsigned long long);
 static void			 print_dec(unsigned long long);
 static void			 print_hex(unsigned long long);
 static void			 print_oct(unsigned long long);
@@ -83,6 +84,7 @@ hex(const char *s)
 		break;
 	}
 	print_bin(i);
+	print_chr(i);
 	print_dec(i);
 	print_hex(i);
 	print_oct(i);
@@ -187,6 +189,15 @@ static void
 print_bin(unsigned long long n)
 {
 	print_num(n, 2, "b%s\n");
+}
+
+static void
+print_chr(unsigned long long n)
+{
+	if (n < 256)
+		printf("'%c'\n", (char) n);
+	else
+		printf("U+%04x\n", (unsigned int) n);
 }
 
 static void
