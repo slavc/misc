@@ -14,5 +14,6 @@ set guioptions-=r
 set guioptions-=R
 set guioptions-=l 
 set guioptions-=L
+set guioptions+=a " automatically copy selection to clipboard
 hi CursorLine guibg=#121f12
 set cursorline
