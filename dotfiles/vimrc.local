@@ -32,6 +32,24 @@ function! CloseOtherBufs()
     endwhile
 endfunction
 
+function! InsertFunctionHeader()
+    let s:line=line(".")
+    call append(s:line   ,"//-----------------------------------------------------------------------------")
+    call append(s:line+1 ,"//! \\brief")
+    call append(s:line+2 ,"//!     ")
+    call append(s:line+3 ,"//!")
+    call append(s:line+4 ,"//! \\details")
+    call append(s:line+5 ,"//!     ")
+    call append(s:line+6 ,"//!")
+    call append(s:line+7 ,"//! \\param[in]          ")
+    call append(s:line+8 ,"//!     ")
+    call append(s:line+9 ,"//!")
+    call append(s:line+10,"//! \\return")
+    call append(s:line+11,"//!     ")
+    call append(s:line+12,"//!")
+    unlet s:line
+endfunction
+
 " turn off any kind of bell
 "set hidden " no annoying "no write since last change" message
 au BufNewFile,BufRead *.ecpp setlocal filetype=cpp
@@ -42,23 +60,21 @@ au BufNewFile,BufRead *.xul set filetype=xml
 au BufNewFile,BufRead *.zcpp set filetype=cpp
 colorscheme default
 filetype on
-map <C-S-h> zh
-map <C-S-l> zl
-map <C-c> "*y<CR>
-map <C-h> zH
-map <C-l> zL
-map <C-s> :w<CR>
+map <C-c> "+y
+imap <C-v> <ESC>"+p
+map <F2> :call ToggleKNRMode()<CR>
+map <F4> :call InsertFunctionHeader()<CR>
 map <F5> :e<CR>:$<CR>2<C-e>
 map <F6> :split<CR>
 map <F7> :vsplit<CR>
-nnoremap <F10> :b! <C-Z>
-nnoremap <F11> :nohl<CR>
-nnoremap <F12> :call CloseCurrentBuf()<CR>
-nnoremap <F2> :call ToggleKNRMode()<CR>
-nnoremap <F9> :call ToggleSmallFont()<CR>
-nnoremap <S-F12> :call CloseOtherBufs()<CR>
-nnoremap <S-Tab> :bp!<CR>
-nnoremap <Tab> :bn!<CR>
+map <F10> :b! <C-Z>
+map <F11> :nohl<CR>
+map <F12> :call CloseCurrentBuf()<CR>
+map <S-F12> :call CloseOtherBufs()<CR>
+map <C-h> zH
+map <C-l> zL
+nmap <Tab> :bn!<CR>
+nmap <S-Tab> :bp!<CR>
 set ai
 set background=dark
 set cindent
@@ -82,5 +98,8 @@ set vb
 set vb t_vb=
 set wildchar=<Tab> wildmenu wildmode=full
 set wildcharm=<C-Z>
+set colorcolumn=80
 syntax on
 set mouse=a
+
+
