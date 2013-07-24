@@ -17,8 +17,7 @@
 /*
  * hex
  *
- * Print numbers given as arguments in binary, decimal, hexadecimal
- * and octal notation.
+ * Print args in binary, character, decimal, hexadecimal and octal notation.
  */
 
 #include <unistd.h>
@@ -29,6 +28,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+
+#define NELEMS(array) (sizeof(array)/sizeof((array)[0]))
 
 static void			 hex(const char *);
 unsigned long long		 read_bin(const char *);
@@ -45,6 +46,19 @@ static void			 print_hex(unsigned long long);
 static void			 print_oct(unsigned long long);
 static void			 print_num(unsigned long long, int, const char *);
 static char			 int2digit(int i);
+
+static const char	 digits[] = {
+	'0', '1', '2', '3',
+	'4', '5', '6', '7',
+	'8', '9', 'a', 'b',
+	'c', 'd', 'e', 'f',
+};
+static const char	 digit_values[] = {
+	0,   1,  2,  3,
+	4,   5,  6,  7,
+	8,   9, 10, 11,
+	12, 13, 14, 15,
+};
 
 int
 main(int argc, char **argv)
@@ -140,48 +154,13 @@ read_num(const char *s, int base, const char *name)
 static int
 digit2int(char c)
 {
-	switch (c) {
-	case '0':
-		return 0;
-	case '1':
-		return 1;
-	case '2':
-		return 2;
-	case '3':
-		return 3;
-	case '4':
-		return 4;
-	case '5':
-		return 5;
-	case '6':
-		return 6;
-	case '7':
-		return 7;
-	case '8':
-		return 8;
-	case '9':
-		return 9;
-	case 'a':
-	case 'A':
-		return 10;
-	case 'b':
-	case 'B':
-		return 11;
-	case 'c':
-	case 'C':
-		return 12;
-	case 'd':
-	case 'D':
-		return 13;
-	case 'e':
-	case 'E':
-		return 14;
-	case 'f':
-	case 'F':
-		return 15;
-	default:
-		return -1;
-	}
+	int	 i;
+
+	c = tolower(c);
+	for (i = 0; i < NELEMS(digits); ++i)
+		if (digits[i] == c)
+			return digit_values[i];
+	return -1;
 }
 
 
@@ -240,40 +219,7 @@ print_num(unsigned long long n, int base, const char *fmt)
 static char
 int2digit(int i)
 {
-	switch (i) {
-	case 0:
-		return '0';
-	case 1:
-		return '1';
-	case 2:
-		return '2';
-	case 3:
-		return '3';
-	case 4:
-		return '4';
-	case 5:
-		return '5';
-	case 6:
-		return '6';
-	case 7:
-		return '7';
-	case 8:
-		return '8';
-	case 9:
-		return '9';
-	case 10:
-		return 'A';
-	case 11:
-		return 'B';
-	case 12:
-		return 'C';
-	case 13:
-		return 'D';
-	case 14:
-		return 'E';
-	case 15:
-		return 'F';
-	default:
+	if (i < 0 || i >= NELEMS(digits))
 		return '?';
-	}
+	return toupper(digits[i]);
 }
