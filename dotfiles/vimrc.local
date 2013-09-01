@@ -349,14 +349,14 @@ function! ToggleKNRMode()
         set sts=8
         set sw=8
         "set textwidth=80
-        "set colorcolumn=81
+        set colorcolumn=81
         echo "KNF mode on"
     else
         set expandtab
         set sts=4
         set sw=4
         "set textwidth=0
-        "set colorcolumn=0
+        set colorcolumn=0
         echo "KNF mode off"
     endif
 endfunction
@@ -415,7 +415,6 @@ set ai
 set backupdir=~/.vim/tmp
 set cindent
 set cinoptions=:0
-set colorcolumn=80
 set directory=~/.vim/tmp
 set expandtab
 set formatoptions+=b " wrapping at first blank before textwidth
