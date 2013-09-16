@@ -27,14 +27,12 @@ export PS1 PAGER LESS VISUAL EDITOR
 vcl() {
     local cmd='gvim --servername ${GVIM_SERVER:=GVIM_$$} --remote-silent'
     while [ $# -gt 0 ]; do
-        arg=$1
-        if echo "$arg" | egrep '^.*:[[:digit:]]+$' > /dev/null; then
-            filename=${arg%:*}
-            lineno=${arg##*:}
-            eval $cmd '+['$lineno']' "$filename"
-        else
-            eval $cmd "$filename"
+        local filename=${1%:*}
+        local lineno=${1##*:}
+        if [ "$lineno" != "$filename" ]; then
+            local lineopt="+${lineno}"
         fi
+        eval $cmd "$lineopt" "$filename"
         shift
     done
 }
