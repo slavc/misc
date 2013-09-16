@@ -101,5 +101,5 @@ set wildcharm=<C-Z>
 set colorcolumn=80
 syntax on
 set mouse=a
-
+set noswapfile
 
