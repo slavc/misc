@@ -1,0 +1,17 @@
+#!/bin/sh
+
+cmd="gvim --servername $GVIM_SERVER --remote-silent"
+if [ $# -gt 1 ]; then
+    eval $cmd "$@"
+else
+    case "$1" in
+    *:*)
+        filename=${1%:*}
+        lineno=${1##*:}
+        eval $cmd +$lineno "$filename"
+        ;;
+    *)
+        eval $cmd "$1"
+        ;;
+    esac
+fi

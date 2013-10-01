@@ -111,7 +111,6 @@ set tabstop=4
 " set lbr
 " set tw=500
 
-set ai "Auto indent
 set si "Smart indent
 " set wrap "Wrap lines
 
@@ -349,14 +348,14 @@ function! ToggleKNRMode()
         set sts=8
         set sw=8
         "set textwidth=80
-        set colorcolumn=81
+        "set colorcolumn=81
         echo "KNF mode on"
     else
         set expandtab
         set sts=4
         set sw=4
         "set textwidth=0
-        set colorcolumn=0
+        "set colorcolumn=0
         echo "KNF mode off"
     endif
 endfunction
@@ -412,17 +411,18 @@ map <C-l> zL
 nmap <Tab> :bn!<CR>
 nmap <S-Tab> :bp!<CR>
 set ai
-set backupdir=~/.vim/tmp
+set background=light
 set cindent
 set cinoptions=:0
 set directory=~/.vim/tmp
+set backupdir=~/.vim/tmp
 set expandtab
 set formatoptions+=b " wrapping at first blank before textwidth
 set formatoptions+=c " ----- '' -----
 set formatoptions+=n " recognize numbered lists
 set formatoptions+=r " insert comment leader when Enter pressed
 set formatoptions+=t " auto format of both text and comments
-set hidden
+set hidden " no No write since last change message
 set ic
 set incsearch
 set mouse=a
@@ -439,8 +439,9 @@ set vb
 set vb t_vb=
 set wildchar=<Tab> wildmenu wildmode=full
 set wildcharm=<C-Z>
-set showtabline=1
+set colorcolumn=80
 syntax on
 set mouse=a
 set noswapfile
+set autoread
 

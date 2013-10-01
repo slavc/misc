@@ -1,19 +1,14 @@
-"set gfn=Terminus\ 12
-set guioptions+=c " console dialogs for simple choices
-"set guioptions+=v " vertical button layout for dialogs
-"set guioptions+=b " bottom scrollbar
-"set guioptions+=h " limit the length of bottom scrollbar to length of cursor
-"line: less computations
-"set guioptions-=m " no menubar
-"set guioptions-=T " no toolbar
-" no scrollbars
-"set guioptions-=r
-"set guioptions-=R
-"set guioptions-=l 
-"set guioptions-=L
-"set guioptions+=a " automatically copy selection to clipboard
-"hi CursorLine guibg=#121f12
-set cursorline
-colorscheme solarized
-set bg=light
+source /etc/vimrc
 set gfn=Deja\ Vu\ Sans\ Mono\ 9
+set bg=light
+colorscheme solarized
+set guioptions+=c " console dialogs for simple choices
+set guioptions-=m " no menubar
+set guioptions-=T " no toolbar
+set guioptions-=r
+set guioptions-=R
+set guioptions-=l 
+set guioptions-=L
+set guioptions-=e
+set guioptions+=a " automatically copy selection to clipboard
+set cursorline

@@ -1,4 +1,6 @@
 pgrep gnome-settings-daemon >/dev/null || /usr/libexec/gnome-settings-daemon &
+xset +fp /usr/share/fonts/artwiz-aleczapka
+xrdb -load ~/.Xresources_solarized_light
 
 {
     sleep 6
@@ -10,7 +12,7 @@ pgrep gnome-settings-daemon >/dev/null || /usr/libexec/gnome-settings-daemon &
     xset r rate 400 50
     xmodmap ~/.Xmodmap
     sleep 2
-    xsetbg -screen all -fill ~/Misc/wallpapers/city-hazy-blurred-unsharp-night-rain-1920x1080.jpg
+    xsetroot -solid black
 } &
 
 eval `ssh-agent`
