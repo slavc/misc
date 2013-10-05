@@ -178,8 +178,8 @@ set viminfo^=%
 """"""""""""""""""""""""""""""
 " => Status line
 """"""""""""""""""""""""""""""
-" Always show the status line
-set laststatus=2
+" Never show the status line
+set laststatus=0
 
 " Format the status line
 set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l
@@ -431,6 +431,7 @@ set nowrap
 set shiftwidth=4
 set shortmess=atI
 set showbreak=--
+set showtabline=1
 set smartcase
 set smarttab
 set softtabstop=4
