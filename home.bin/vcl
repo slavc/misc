@@ -1,6 +1,12 @@
 #!/bin/sh
 
-cmd="gvim --servername $GVIM_SERVER --remote-silent"
+if [ "$(uname -s)" == "Darwin" ]; then
+    cmd="mvim"
+else
+    cmd="gvim"
+fi
+
+cmd="$cmd --servername $GVIM_SERVER --remote-silent"
 if [ $# -gt 1 ]; then
     eval $cmd "$@"
 else
