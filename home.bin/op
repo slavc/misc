@@ -8,8 +8,13 @@ function op_file() {
 
     case "$type" in
     pdf|ps)
-        evince "$path" > /dev/null 2>&1 &
-        disown
+        for prog in evince mupdf; do
+            if which "$prog" > /dev/null 2>&1; then
+                $prog "$path" > /dev/null 2>&1 &
+                disown
+                break
+            fi
+        done
         ;;
     chm)
         xchm "$path" > /dev/null 2>&1 &
