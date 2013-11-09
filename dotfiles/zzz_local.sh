@@ -10,7 +10,7 @@ PS1='\[\e[1;'$ps1fg';47m\]`awk "BEGIN { n_cols = int(ENVIRON[\"COLUMNS\"]); txt 
 
 case "$TERM" in
 *rxvt*|*xterm*)
-    PROMPT_COMMAND='echo -ne "\e]0;'
+    PROMPT_COMMAND='printf "\033]0;'
     if [ `id -u` -eq 0 ]; then
         PROMPT_COMMAND="${PROMPT_COMMAND}#"
     else
