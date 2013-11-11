@@ -49,22 +49,26 @@ xopendir(const char *path)
 static void
 replacebad(char *s)
 {
-	char		*readp;
-	char		*writep;
+	char		*rp; /* read pointer */
+	char		*wp; /* write pointer */
 	char		 prev = '\0';
 	const char	 subst = '_';
 
-	for (readp = writep = s; *readp != '\0'; ++readp) {
-		if (!isascii(*readp)
-		    || (unsigned) *readp > 127
-		    || strchr("\\:<>?\"", *readp) != NULL) {
+	rp = wp = strrchr(s, '/');
+	if (rp == NULL)
+		rp = wp = s;
+	while (*rp != '\0') {
+		if (!isascii(*rp)
+		    || (unsigned) *rp > 127
+		    || strchr("\\:<>?\"", *rp) != NULL) {
 			if (prev != subst)
-				*writep++ = prev = subst;
+				*wp++ = prev = subst;
 		} else {
-			*writep++ = prev = *readp;
+			*wp++ = prev = *rp;
 		}
+		++rp;
 	}
-	*writep = '\0';
+	*wp = '\0';
 }
 
 static void
@@ -74,30 +78,38 @@ move(const char *oldpath, const char *newpath)
 	/* TODO implement actual moving */
 }
 
+/* apply func to each filename in directory pointed to by path */
 static void
-fat32compat(const char *path)
+apply(const char *path, void (*func)(const char *))
 {
 	DIR		*d;
 	struct dirent	*e;
+	char		*newpath;
+
+	d = xopendir(path);
+	while ((e = readdir(d)) != NULL) {
+		if (e->d_type == DT_DIR
+		    && (!strcmp(".", e->d_name) || !strcmp("..", e->d_name))) {
+			continue;
+		}
+		/* +2 for '\0' and a '/' */
+		newpath = xmalloc(strlen(path) + strlen(e->d_name) + 2);
+		sprintf(newpath, "%s/%s", path, e->d_name);
+		func(newpath);
+		free(newpath);
+	}
+	closedir(d);
+}
+
+static void
+fat32compat(const char *path)
+{
 	struct stat	 st;
 	char		*newpath;
 
 	xstat(path, &st);
-	if (rflag && S_ISDIR(st.st_mode)) {
-		d = xopendir(path);
-		while ((e = readdir(d)) != NULL) {
-			if (e->d_type == DT_DIR
-			    && (!strcmp(".", e->d_name) || !strcmp("..", e->d_name))) {
-				continue;
-			}
-			/* +2 for '\0' and a '/' */
-			newpath = xmalloc(strlen(path) + strlen(e->d_name) + 2);
-			sprintf(newpath, "%s/%s", path, e->d_name);
-			fat32compat(newpath);
-			free(newpath);
-		}
-		closedir(d);
-	}
+	if (rflag && S_ISDIR(st.st_mode))
+		apply(path, fat32compat);
 	newpath = xmalloc(strlen(path) + 1);
 	strcpy(newpath, path);
 	replacebad(newpath);
@@ -110,7 +122,7 @@ static void
 usage(void)
 {
 	printf(
-	    "usage: fat32compat [-d] [-f] [-r] <paths...>\n"
+	    "usage: fat32compat [-d] [-f] [-r] [-l] <paths...>\n"
 	    "	-d -- dry run, show what the program would do\n"
 	    "	-f -- \"force\", more resilience towards errors; overwrite existing files\n"
 	    "	-r -- recursively descend into directories\n");
@@ -122,7 +134,7 @@ main(int argc, char **argv)
 	int		 ch;
 	extern int	 optind;
 
-	while ((ch = getopt(argc, argv, "dfhr")) != -1) {
+	while ((ch = getopt(argc, argv, "dfhrl")) != -1) {
 		switch (ch) {
 		case 'd':
 			++dflag;
