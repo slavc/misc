@@ -13,13 +13,12 @@
 #include <ctype.h>
 
 int	 dflag; /* dry run */
-int	 fflag; /* force */
 int	 rflag; /* recursive */
 
 static void
-xstat(const char *path, struct stat *p)
+xlstat(const char *path, struct stat *p)
 {
-	if (stat(path, p) == -1)
+	if (lstat(path, p) == -1)
 		err(1, "stat: %s", path);
 }
 
@@ -45,36 +44,60 @@ xopendir(const char *path)
 	return p;
 }
 
-/* replace bad characters with a single underscore */
-static void
-replacebad(char *s)
+static char *
+hex(int ch, char *p)
 {
-	char		*rp; /* read pointer */
-	char		*wp; /* write pointer */
-	char		 prev = '\0';
-	const char	 subst = '_';
+	static const char	 tab[] = "0123456789ABCDEF";
 
-	rp = wp = strrchr(s, '/');
-	if (rp == NULL)
-		rp = wp = s;
-	while (*rp != '\0') {
-		if (!isascii(*rp)
-		    || (unsigned) *rp > 127
-		    || strchr("\\:<>?\"", *rp) != NULL) {
-			if (prev != subst)
-				*wp++ = prev = subst;
+	*p++ = tab[(ch >> 4) & 0xF];
+	*p++ = tab[ch & 0xF];
+	return p;
+}
+
+/* replace "bad" characters with their hex codes;
+ * return non-zero if anything was replaced 
+ */
+static char *
+replacebad(const char *s)
+{
+	const char	*rp;	/* read pointer */
+	char		*wp;	/* write pointer */
+	int		 nbad;	/* how many "bad" characters are in s */
+	char		*buf;	/* buffer where modified string is written */
+
+#define ISBAD(ch) \
+	!isascii(ch) || (unsigned) (ch) > 127 || strchr("\\:<>?\"", (ch)) != NULL
+
+	for (rp = s, nbad = 0; *rp != '\0'; ++rp) {
+		if (ISBAD(*rp))
+			++nbad;
+	}
+	if (nbad == 0)
+		return NULL;
+
+	/* replace each bad char with it's hex code, e.g. "AF" */
+	buf = xmalloc(strlen(s) + nbad + 1);
+	strcpy(buf, s);
+	for (rp = s, wp = buf; *rp != '\0'; ++rp) {
+		if (ISBAD(*rp)) {
+			wp = hex(*rp, wp);
 		} else {
-			*wp++ = prev = *rp;
+			*wp++ = *rp;
 		}
-		++rp;
 	}
 	*wp = '\0';
+	return buf;
 }
 
 static void
 move(const char *oldpath, const char *newpath)
 {
-	printf("mv '%s' '%s'\n", oldpath, newpath);
+	if (dflag) {
+		printf("mv '%s' '%s'\n", oldpath, newpath);
+		return;
+	}
+	if (rename(oldpath, newpath) == -1)
+		err(1, "rename");
 	/* TODO implement actual moving */
 }
 
@@ -102,29 +125,33 @@ apply(const char *path, void (*func)(const char *))
 }
 
 static void
-fat32compat(const char *path)
+renamefat32compat(const char *path)
 {
 	struct stat	 st;
 	char		*newpath;
 
-	xstat(path, &st);
-	if (rflag && S_ISDIR(st.st_mode))
-		apply(path, fat32compat);
-	newpath = xmalloc(strlen(path) + 1);
-	strcpy(newpath, path);
-	replacebad(newpath);
-	if (strcmp(newpath, path) != 0)
+	xlstat(path, &st);
+	if (S_ISLNK(st.st_mode))
+		return;
+	newpath = replacebad(path);
+	if (newpath != NULL) {
 		move(path, newpath);
-	free(newpath);
+		if (!dflag)
+			path = newpath;
+	}
+	if (rflag && S_ISDIR(st.st_mode))
+		apply(path, renamefat32compat);
+	if (newpath != NULL)
+		free(newpath);
 }
 
 static void
 usage(void)
 {
 	printf(
-	    "usage: fat32compat [-d] [-f] [-r] [-l] <paths...>\n"
+	    "usage: renamefat32compat [-d] [-r] <path>...\n"
+	    "Rename directories and files so that they are compatible with FAT32.\n"
 	    "	-d -- dry run, show what the program would do\n"
-	    "	-f -- \"force\", more resilience towards errors; overwrite existing files\n"
 	    "	-r -- recursively descend into directories\n");
 }
 
@@ -134,13 +161,10 @@ main(int argc, char **argv)
 	int		 ch;
 	extern int	 optind;
 
-	while ((ch = getopt(argc, argv, "dfhrl")) != -1) {
+	while ((ch = getopt(argc, argv, "dhr")) != -1) {
 		switch (ch) {
 		case 'd':
 			++dflag;
-			break;
-		case 'f':
-			++fflag;
 			break;
 		case 'h':
 			usage();
@@ -156,8 +180,12 @@ main(int argc, char **argv)
 	argc -= optind;
 	argv += optind;
 
-	while (argc--)
-		fat32compat(*argv++);
+	if (argc == 0) {
+		usage();
+	} else {
+		while (argc--)
+			renamefat32compat(*argv++);
+	}
 
 	return 0;
 }
