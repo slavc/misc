@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# grepsrc
+# grepsym
+# grepisrc
+# grepsym
+
+# grep source code files.
+# Modifiers:
+#  *i* -- ignore case.
+#  *sym -- search for a whole word.
+
+if [ $# -eq 0 ]; then
+    echo "usage: $0 <needle> [<dir1> <dir2>...]" 2>&1
+    exit 1
+fi
+
+case "$0" in
+*grepi*)
+    ignorecase="-i"
+    ;;
+*)
+    ignorecase=""
+    ;;
+esac
+
+case "$0" in
+*sym)
+    needle="\<${1}\>"
+    ;;
+*)
+    needle="$1"
+    ;;
+esac
+shift
+findsrc "$@" | sort | xargs egrep --color=auto -n $ignorecase "${needle}" /dev/null
