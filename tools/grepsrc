@@ -15,8 +15,10 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-case "$0" in
-*grepi*)
+progname=${0##*/}
+
+case "$progname" in
+grepi*)
     ignorecase="-i"
     ;;
 *)
@@ -24,7 +26,7 @@ case "$0" in
     ;;
 esac
 
-case "$0" in
+case "$progname" in
 *sym)
     needle="\<${1}\>"
     ;;
@@ -32,5 +34,16 @@ case "$0" in
     needle="$1"
     ;;
 esac
+
+case "$progname" in
+grep*mak)
+    findcmd=findmak
+    ;;
+*)
+    findcmd=findsrc
+    ;;
+esac
+
 shift
-findsrc "$@" | sort | xargs egrep --color=auto -n $ignorecase "${needle}" /dev/null
+
+$findcmd "$@" | sort | xargs egrep --color=auto -n $ignorecase "${needle}" /dev/null

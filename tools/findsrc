@@ -11,13 +11,13 @@ fi
 
 case "$0" in
 *findsrc)
-    searchexpr="-iname *.c    \
-        -o -iname *.h         \
-        -o -iname *.cpp       \
-        -o -iname *.hpp       \
-        -o -iname *.cxx       \
-        -o -iname *.hxx       \
-        -o -iname *.java"
+    searchexpr="-iname '*.c'    \
+        -o -iname '*.h'         \
+        -o -iname '*.cpp'       \
+        -o -iname '*.hpp'       \
+        -o -iname '*.cxx'       \
+        -o -iname '*.hxx'       \
+        -o -iname '*.java'"
     ;;
 *findmak)
     searchexpr="-iname cmakelists -o -iname *makefile -o -iname *.mk"
@@ -26,7 +26,7 @@ esac
 
 while [ $# -gt 0 ]; do
     if [ -d "$1" ]; then
-        find "$1" -type f \( $searchexpr \)
+        eval find "$1" -type f '\(' $searchexpr '\)'
     else
         echo "$1"
     fi
