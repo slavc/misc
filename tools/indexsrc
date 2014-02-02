@@ -1,9 +1,8 @@
 #!/bin/sh
 
 cscope_opts='-Rqbu'
-ctags_opts='-R'
 
-function make_cscope_dir_args() {
+make_cscope_dir_args() {
     args=''
     for i in "$@"; do
         args="$args '-s$i'"
@@ -23,5 +22,6 @@ if [ $# -eq 0 ]; then
     set '.'
 fi
 
-ctags $ctags_opts "$@"
+rm -f tags
+findsrc "$@" | xargs ctags -a -f tags
 cscope $cscope_opts `make_cscope_dir_args "$@"`

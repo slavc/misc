@@ -19,19 +19,13 @@ progname=${0##*/}
 
 case "$progname" in
 grepi*)
-    ignorecase="-i"
-    ;;
-*)
-    ignorecase=""
+    greopopts="${grepopts} -i"
     ;;
 esac
 
 case "$progname" in
 *sym)
-    needle="\<${1}\>"
-    ;;
-*)
-    needle="$1"
+    grepopts="${grepopts} -w"
     ;;
 esac
 
@@ -44,6 +38,8 @@ grep*mak)
     ;;
 esac
 
+needle="$1"
+
 shift
 
-$findcmd "$@" | sort | xargs egrep --color=auto -n $ignorecase "${needle}" /dev/null
+$findcmd "$@" | sort | xargs grep -E -n $grepopts "$needle" /dev/null | color green "$needle"
