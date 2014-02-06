@@ -28,7 +28,7 @@
 #define BG_BASE	40
 
 static int	 bflag; /* bold */
-static int	 cflag; /* ignore case */
+static int	 iflag; /* ignore case */
 
 static void		*xrealloc(void *, size_t);
 static void		 usage(int);
@@ -48,13 +48,13 @@ main(int argc, char **argv)
 	int		 ch;
 	extern int	 optind;
 
-	while ((ch = getopt(argc, argv, "bch")) != -1) {
+	while ((ch = getopt(argc, argv, "bih")) != -1) {
 		switch (ch) {
 		case 'b':
 			++bflag;
 			break;
-		case 'c':
-			++cflag;
+		case 'i':
+			++iflag;
 			break;
 		case 'h':
 			usage(EXIT_SUCCESS);
@@ -89,7 +89,12 @@ usage(int exitcode)
 {
 	extern char	*__progname;
 
-	printf("usage: %s [-b] [-c] <color> <pattern>\n", __progname);
+	printf("usage: %s [-b] [-i] [<fg>]:[<bg>] <pattern>\n", __progname);
+	printf("Read from stdin, colorize text matching <pattern>, output to stdout.\n");
+	printf("	-b -- bold\n");
+	printf("	-i -- ignore case\n");
+	printf("	<fg>, <bg> -- foreground and background colors\n");
+	printf("	<pattern> -- extended regular expression\n");
 	exit(exitcode);
 }
 
@@ -106,6 +111,7 @@ color(char *color, const char *pattern)
 	int		 fg;
 	int		 bg;
 	int		 rc;
+	regoff_t	 off;
 
 	line = NULL;
 	linesz = 0;
@@ -113,20 +119,18 @@ color(char *color, const char *pattern)
 	parsecolor(color, &fg, &bg);
 	esccolor = fmtesc(fg, bg, bflag);
 
-	rc = regcomp(&re, pattern, REG_EXTENDED | (cflag ? REG_ICASE : 0));
+	rc = regcomp(&re, pattern, REG_EXTENDED | (iflag ? REG_ICASE : 0));
 	if (rc != 0)
 		errx(EXIT_FAILURE, "``%s'': %s", pattern, strregerror(rc));
 
 	errno = 0;
 	while (getline(&line, &linesz, stdin) != -1) {
-		rc = regexec(&re, line, 1, &match, 0);
-		if (rc != 0 && rc != REG_NOMATCH)
-			errx(EXIT_FAILURE, "regexec: %s", strregerror(rc));
-		if (rc == 0) {
-			/* We're inserting text, need to adjust the end index
-			 * accordingly. */
-			match.rm_eo += ins(&line, &linesz, esccolor, match.rm_so);
-			ins(&line, &linesz, escreset, match.rm_eo);
+		for (off = 0; (rc = regexec(&re, line + off, 1, &match, 0)) != REG_NOMATCH; /* empty */ ) {
+			if (rc != 0)
+				errx(EXIT_FAILURE, "regexec: %s", strregerror(rc));
+			match.rm_eo += ins(&line, &linesz, esccolor, match.rm_so + off);
+			off += ins(&line, &linesz, escreset, match.rm_eo + off);
+			off += match.rm_eo;
 		}
 		len = strlen(line);
 		if (write(STDOUT_FILENO, line, len) != len)
@@ -178,9 +182,11 @@ strregerror(int code)
 		{ REG_ERANGE,      "invalid character range in [ ]"},
 		{ REG_ESPACE,      "ran out of memory"},
 		{ REG_BADRPT,      "?, *, or + operand invalid"},
-		{ REG_EMPTY,       "empty (sub)expression"},
+#ifdef OpenBSD
 		{ REG_ASSERT,      "``can't happen'' --you found a bug"},
 		{ REG_INVARG,      "invalid argument, e.g., negative-length string"},
+		{ REG_EMPTY,       "empty (sub)expression"},
+#endif
 		{ 0, NULL}
 	}, *p;
 

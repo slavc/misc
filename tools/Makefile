@@ -1,6 +1,6 @@
 .PHONY: install
 
-CFLAGS=-O2 -g
+CFLAGS=-O2 -g -Wall
 
 all: findsrc grepsrc color hex
 
@@ -9,6 +9,7 @@ install: findsrc grepsrc indexsrc color hex
 	install -m 700 findsrc "${HOME}/bin"
 	install -m 700 grepsrc "${HOME}/bin"
 	install -m 700 indexsrc "${HOME}/bin"
+	install -m 700 uniqsrc "${HOME}/bin"
 	install -m 700 color "${HOME}/bin"
 	install -m 700 hex "${HOME}/bin"
 	ln -fs "${HOME}/bin/findsrc" "${HOME}/bin/findmak"
@@ -19,7 +20,7 @@ install: findsrc grepsrc indexsrc color hex
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepimak"
 
 uninstall:
-	rm -f "${HOME}/bin/{findsrc,grepsrc,indexsrc,findmak,grepisrc,grepsym,grepisym,grepmak,grepimak,color}"
+	rm -f "${HOME}/bin/{findsrc,grepsrc,indexsrc,uniqsrc,findmak,grepisrc,grepsym,grepisym,grepmak,grepimak,color,hex}"
 
 color: color.o
 	${CC} ${CFLAGS} -o $@ color.o
@@ -28,4 +29,4 @@ hex: hex.o
 	${CC} ${CFLAGS} -o $@ hex.o
 
 clean:
-	rm -f *.o
+	rm -f *.o color hex

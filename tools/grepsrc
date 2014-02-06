@@ -17,15 +17,18 @@ fi
 
 progname=${0##*/}
 
+needle="$1"
+
 case "$progname" in
 grepi*)
-    greopopts="${grepopts} -i"
+    grepopts="${grepopts} -i"
+    coloropts="${coloropts} -c"
     ;;
 esac
 
 case "$progname" in
 *sym)
-    grepopts="${grepopts} -w"
+    needle="\<${needle}\>"
     ;;
 esac
 
@@ -38,8 +41,7 @@ grep*mak)
     ;;
 esac
 
-needle="$1"
-
 shift
 
-$findcmd "$@" | sort | xargs grep -E -n $grepopts "$needle" /dev/null | color green "$needle"
+$findcmd "$@" | xargs grep -E -n $grepopts "$needle" /dev/null | sort | color $coloropts green "$needle"
+

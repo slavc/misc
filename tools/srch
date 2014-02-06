@@ -1,0 +1,18 @@
+#!/bin/sh
+
+function err() {
+    echo "${0##*/}: $2" 1>&2
+    exit $1
+}
+
+function usage() {
+    echo "usage: ${0##*/} [-x] [-I] <filename_pattern> [<where_to_look> ...]"
+    exit $1
+}
+
+args=`getopt xI "$@"`
+if [ $# -ne 0 ]; then
+    usage 1
+fi
+
+# TODO

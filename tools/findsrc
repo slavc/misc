@@ -20,7 +20,7 @@ case "$0" in
         -o -iname '*.java'"
     ;;
 *findmak)
-    searchexpr="-iname cmakelists -o -iname *makefile -o -iname *.mk"
+    searchexpr="-iname '*cmakelists*' -o -iname '*.cmake' -o -iname '*makefile' -o -iname '*.mk'"
     ;;
 esac
 
