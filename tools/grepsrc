@@ -22,7 +22,7 @@ needle="$1"
 case "$progname" in
 grepi*)
     grepopts="${grepopts} -i"
-    coloropts="${coloropts} -c"
+    coloropts="${coloropts} -i"
     ;;
 esac
 
