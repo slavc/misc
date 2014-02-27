@@ -38,15 +38,13 @@
 
 *background:            S_base03
 *foreground:            S_base0
-!*fading:                40
-!*fadeColor:             S_base03
 *cursorColor:           S_base1
-*pointerColorBackground:S_base01
-*pointerColorForeground:S_base1
+*pointerColorBackground:S_base3
+*pointerColorForeground:S_base01
 
 !! black dark/light
-*color0:                S_base02
-*color8:                S_base03
+*color0:                S_base0
+*color8:                S_base1
 
 !! red dark/light
 *color1:                S_red
@@ -54,15 +52,15 @@
 
 !! green dark/light
 *color2:                S_green
-*color10:               S_base01
+*color10:               S_green
 
 !! yellow dark/light
 *color3:                S_yellow
-*color11:               S_base00
+*color11:               S_yellow
 
 !! blue dark/light
 *color4:                S_blue
-*color12:               S_base0
+*color12:               S_blue
 
 !! magenta dark/light
 *color5:                S_magenta
@@ -70,25 +68,10 @@
 
 !! cyan dark/light
 *color6:                S_cyan
-*color14:               S_base1
+*color14:               S_cyan
 
 !! white dark/light
-*color7:                S_base2
-*color15:               S_base3
+*color7:                S_base02
+*color15:               S_base03
 
-*scrollBar: false
-*fastScroll: true
-*font: -*-terminus-medium-r-normal--16-*-*-*-*-*-iso10646-1
-*boldFont: -*-terminus-bold-r-normal--16-*-*-*-*-*-iso10646-1
-*saveLines: 2048
-!*internalBorder: 2
-
-
-Xft.dpi:        96
-Xft.antialias:  true
-Xft.rgba:       rgb
-Xft.hinting:    true
-Xft.hintstyle:  hintfull
-
-
-XLock.mode: blank
+XTerm*faceName: Terminus:size=12

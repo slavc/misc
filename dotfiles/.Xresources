@@ -7,5 +7,4 @@ XLock.mode: blank
 XTerm*loginShell: true
 XTerm*scrollBar: false
 XTerm*saveLines: 2048
-XTerm*faceName: DejaVu Sans Mono:size=9
 XTerm*internalBorder: 0

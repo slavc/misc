@@ -74,20 +74,4 @@
 *color7:                S_base2
 *color15:               S_base3
 
-*fastScroll: true
-XTerm*scrollBar: false
-URxvt*scrollBar: false
-*font: xft:DejaVu Sans Mono:size=9
-*faceName: xft:DejaVu Sans Mono:size=9
-*saveLines: 2048
-*internalBorder: 1
-
-
-Xft.dpi:        96
-Xft.antialias:  true
-Xft.rgba:       rgb
-Xft.hinting:    true
-Xft.hintstyle:  hintfull
-
-
-XLock.mode: blank
+XTerm*faceName: DejaVu Sans Mono:size=9
