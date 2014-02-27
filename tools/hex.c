@@ -71,7 +71,7 @@ main(int argc, char **argv)
 static void
 hex(const char *s)
 {
-	unsigned long long i;
+	unsigned long long i = 0;
 
 	switch (s[0]) {
 	case 'b':

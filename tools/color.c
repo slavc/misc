@@ -15,10 +15,12 @@
  */
 
 #include <sys/types.h>
+#include <sys/ioctl.h>
 
 #include <unistd.h>
 #include <err.h>
 #include <regex.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,9 +31,12 @@
 
 static int	 bflag; /* bold */
 static int	 iflag; /* ignore case */
+static int	 fflag; /* force color output */
 
 static void		*xrealloc(void *, size_t);
 static void		 usage(int);
+static bool		 istty(int);
+static int		 passthru(void);
 static int		 color(char *, const char *);
 static const char	*strregerror(int);
 static void		 parsecolor(char *, int *, int *);
@@ -48,10 +53,13 @@ main(int argc, char **argv)
 	int		 ch;
 	extern int	 optind;
 
-	while ((ch = getopt(argc, argv, "bih")) != -1) {
+	while ((ch = getopt(argc, argv, "bfhi")) != -1) {
 		switch (ch) {
 		case 'b':
 			++bflag;
+			break;
+		case 'f':
+			++fflag;
 			break;
 		case 'i':
 			++iflag;
@@ -70,7 +78,10 @@ main(int argc, char **argv)
 
 	if (argc < 2)
 		usage(EXIT_FAILURE);
-	return color(argv[0], argv[1]);
+	if (istty(STDOUT_FILENO) || fflag)
+		return color(argv[0], argv[1]);
+	else
+		return passthru();
 }
 
 static void *
@@ -92,10 +103,43 @@ usage(int exitcode)
 	printf("usage: %s [-b] [-i] [<fg>]:[<bg>] <pattern>\n", __progname);
 	printf("Read from stdin, colorize text matching <pattern>, output to stdout.\n");
 	printf("	-b -- bold\n");
+	printf("	-f -- force color output even when stdout is not terminal\n");
 	printf("	-i -- ignore case\n");
 	printf("	<fg>, <bg> -- foreground and background colors\n");
 	printf("	<pattern> -- extended regular expression\n");
 	exit(exitcode);
+}
+
+static bool
+istty(int fd)
+{
+	int	 error;
+	int	 num;
+
+	error = ioctl(fd, TIOCOUTQ, &num);
+	if (error && errno == ENOTTY)
+		return false;
+	else
+		return true;
+}
+
+static int
+passthru(void)
+{
+	char		 buf[8192];
+	const size_t	 bufsize = sizeof buf;
+	ssize_t		 nread;
+	ssize_t		 nwrote;
+
+	while ((nread = read(STDIN_FILENO, buf, bufsize)) > 0) {
+		nwrote = write(STDOUT_FILENO, buf, nread);
+		if (nwrote != nread)
+			err(EXIT_FAILURE, "short write");
+	}
+	if (nread < 0)
+		err(EXIT_FAILURE, "read");
+
+	return EXIT_SUCCESS;
 }
 
 static int
