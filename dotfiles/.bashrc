@@ -10,3 +10,5 @@ fi
 GVIM_SERVER=GVIM_$$
 export GVIM_SERVER 
 
+alias cu='cu -p com'
+

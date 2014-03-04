@@ -410,6 +410,7 @@ map <C-h> zH
 map <C-l> zL
 nmap <Tab> :bn!<CR>
 nmap <S-Tab> :bp!<CR>
+set comments+=://!
 set ai
 set background=light
 set cindent
@@ -445,4 +446,3 @@ syntax on
 set mouse=a
 set noswapfile
 set autoread
-
