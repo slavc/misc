@@ -17,7 +17,8 @@ case "$0" in
         -o -iname '*.hpp'       \
         -o -iname '*.cxx'       \
         -o -iname '*.hxx'       \
-        -o -iname '*.java'"
+        -o -iname '*.java'      \
+        -o -iname '*.s'"
     ;;
 *findmak)
     searchexpr="-iname '*cmakelists*' -o -iname '*.cmake' -o -iname '*makefile' -o -iname '*.mk'"
