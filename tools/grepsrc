@@ -43,5 +43,5 @@ esac
 
 shift
 
-$findcmd "$@" | xargs grep -E -n $grepopts "$needle" /dev/null | sort | color $coloropts green "$needle"
+$findcmd "$@" | sort | xargs grep -E -n $grepopts "$needle" /dev/null | color $coloropts green "$needle"
 

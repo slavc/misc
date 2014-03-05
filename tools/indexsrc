@@ -23,5 +23,5 @@ if [ $# -eq 0 ]; then
 fi
 
 rm -f tags
-findsrc "$@" | xargs ctags -a -f tags
+findsrc "$@" | sort | xargs ctags -a -f tags
 cscope $cscope_opts `make_cscope_dir_args "$@"`
