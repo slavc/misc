@@ -6,7 +6,8 @@ Browser/explorer for MIB style (e.g. `net.inet.ip.ipsec-expire-acquire=30`) tree
 Library of C routines.
 ### cupiechart/
 Piechart widget for GTK2.
-![Screenshot of cupiechart test program.](https://github.com/S010/misc/blob/master/cupiechart/screenshot.png)
+
+![Screenshot of cupiechart test program](https://github.com/S010/misc/blob/master/cupiechart/screenshot.png)
 ### dotfiles/
 Various settings files.
 ### filemanager/
