@@ -40,6 +40,10 @@ Program for password enquery.
 A template for the license I use for my code.
 ### ljbbsmilies.user.js
 Adds the ability to use phpBB style emoticons when posting or commenting on LiveJournal.com.
+### mandelbrot.c
+Visualization of the [Mandelbrot Set!](http://en.wikipedia.org/wiki/Mandelbrot_set).
+
+![Screenshot of the Mandelbrot Set visualzation](https://raw.githubusercontent.com/S010/misc/master/mandelbrot.png)
 ### plasma.c
 Plasma special effect implementation.
 ### pong.sh
