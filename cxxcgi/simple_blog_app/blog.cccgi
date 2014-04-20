@@ -1,0 +1,210 @@
+<:
+#include <iostream>
+#include <string>
+#include <list>
+#include <sstream>
+#include <cstdlib>
+
+#include <cccgi.hh>
+
+using namespace std;
+using namespace cccgi;
+
+void
+fatal_error(const string &msg) {
+
+:>Content-type: text/html
+
+<html>
+    <head>
+        <title>Error</title>
+    </head>
+    <body>
+        <p><= msg =></p>
+    </body>
+</html>
+
+<:
+    clog << msg << endl;
+
+    exit(1);
+}
+
+struct Cat {
+    long id;
+    string category;
+    string descr;
+    long seq;
+    
+    Cat(): id(-1) { }
+
+    operator bool () {
+        return id != -1;
+    }
+};
+struct Tag {
+    long id;
+    string tag;
+
+    Tag(): id(-1) { }
+
+    operator bool () {
+        return id != -1;
+    }
+};
+struct Post {
+    long id;
+    string title;
+    string content;
+    string ctime;
+    string mtime;
+
+    Post(): id(-1) { }
+
+    operator bool () {
+        return id != -1;
+    }
+};
+
+void
+blog(void) {
+    DBConnectionSqlite dbconn("simple_blog.db");
+    
+    if (!dbconn)
+        fatal_error("failed to connect to database");
+
+    list<Cat> cats;
+    list<Tag> tags;
+    list<Post> posts;
+
+    DBStreamSqlite dbs(dbconn);
+
+    dbs("select id, category, description from categories order by appearance_sequence, id");
+    while (dbs) {
+        Cat cat;
+        dbs >> cat.id >> cat.category >> cat.descr;
+        cats.push_back(cat);
+    }
+
+    if (cats.empty())
+        fatal_error("there is no content on this site yet");
+
+    long cat_id, tag_id, post_id;
+    cat_id = tag_id = post_id = -1;
+
+    Cat cur_cat;
+    Tag cur_tag;
+
+    if (GET.find("cid") != GET.end())
+        cat_id = atol(GET["cid"].c_str());
+    if (GET.find("pid") != GET.end())
+        post_id = atol(GET["pid"].c_str());
+    if (GET.find("tid") != GET.end())
+        tag_id = atol(GET["tag"].c_str());
+
+    if (cat_id == -1 || !((dbs("select id, category, description, appearence_sequence from categories where id = :id")) << cat_id)) {
+        cat_id = cats.begin()->id;
+        cur_cat = *cats.begin();
+    } else {
+        dbs >> cur_cat.id >> cur_cat.category >> cur_cat.descr >> cur_cat.seq;
+    }
+
+    if (tag_id != -1 && ((dbs("select id, tag from tags where id = :id")) << tag_id))
+        dbs >> cur_tag.id >> cur_tag.tag;
+    else
+        tag_id = -1;
+
+    if (post_id != -1 && !((dbs("select id from posts where id = :id")) << post_id))
+        post_id = -1;
+
+    ostringstream select_posts_sql;
+    select_posts_sql << "select "
+                        "   p.id, "
+                        "   p.title, "
+                        "   p.content, "
+                        "   p.ctime, "
+                        "   p.mtime "
+                        "from "
+                        "   posts p, "
+                        "   CategoriesPosts c ";
+    if (tag_id != -1)
+        select_posts_sql <<
+                        "   , TagsPosts t ";
+    select_posts_sql << "where "
+                        "       p.id = c.post_id "
+                        "   and c.category_id = :cat_id ";
+    if (tag_id != -1)
+        select_posts_sql <<
+                        "   and p.id = t.post_id "
+                        "   and t.tag_id = :tag_id ";
+
+    if (post_id != -1)
+        select_posts_sql <<
+                        "   and p.id = :post_id ";
+
+    select_posts_sql << "order by "
+                        "   p.id desc";
+
+    (dbs(select_posts_sql.str())) << cat_id;
+    if (tag_id != -1)
+        dbs << tag_id;
+    if (post_id != -1)
+        dbs << post_id;
+
+    while (dbs) {
+        Post post;
+
+        dbs >> post.id
+            >> post.title
+            >> post.content
+            >> post.ctime
+            >> post.mtime;
+
+        posts.push_back(post);
+    }
+
+:>Content-type: text/html
+
+<html>
+    <head>
+        <title>S010's homepage :: <= cur_cat.category =></title>
+    </head>
+    <body>
+        <div class="everything">
+            <h1>S010's homepage</h1>
+            <div class="categories">
+<:
+    for (list<Cat>::const_iterator c = cats.begin(); c != cats.end(); ++c) {
+:>
+            <= (c != cats.begin() ? ", " : "") =><a href="?cid=<= c->id =>"><= c->category =></a> 
+<:
+    }
+:>
+            </div>
+            <div class="posts">
+<:
+    for (list<Post>::const_iterator p = posts.begin(); p != posts.end(); ++p) {
+:>
+            <div class="post">
+                <h2 class="post_title"><= p->title =></h2>
+                <p class="post_time">ctime: <= p->ctime =></p>
+                <p class="post_time">mtime: <= p->mtime =></p>
+                <p class="post_content"><= p->content =></p>
+            </div>
+<:
+    }
+:>
+            </div>
+        </div>
+    </body>
+</html>
+<:
+}
+
+int
+main(int argc, char **argv) {
+    blog();
+
+    return 0;
+}
+:>

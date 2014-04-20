@@ -1,0 +1,19 @@
+This module allows you to access I/O ports from Python on UNIX.
+
+Supports OpenBSD and Linux, although support for other OSes (especially 
+*BSDs) can probably be implemented easily.
+Architectures: AMD64, i386.
+
+There are 7 functions in portio module:
+* enable_io() -- enables the access to I/O ports, you should call this 
+function before doing any i/o. If it returns True, than access was 
+successfully enabled, if False, then not.
+* outb(port, data) -- write a byte 'data' into port 'port'
+* outw(port, data) -- write a word 'data' into port 'port'
+* outl(port, data) -- write a long 'data' into port 'port'
+* inb(port) -- read a byte from 'port'
+* inw(port) -- read a word from 'port'
+* inl(port) -- read a long from 'port'
+
+Usually, to successfully enable access to I/O ports, the program must 
+be run from the root user.

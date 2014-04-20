@@ -8,6 +8,8 @@ Library of C routines.
 Piechart widget for GTK2.
 
 ![Screenshot of cupiechart test program](https://raw.githubusercontent.com/S010/misc/master/cupiechart/screenshot.png)
+### cxxcgi/
+POC of C++ look-alike to Java Server Pages.
 ### dotfiles/
 Various settings files.
 ### filemanager/
@@ -18,6 +20,10 @@ Useful utilities.
 Simple LISP interpreter written in C.
 ### pcspkr_play/
 Play a melody on the PC-speaker.
+### phpage/
+Simple homepage/blog engine in PHP.
+### py_portio/
+Python module for accessing I/O ports on UNIX systems.
 ### tools/
 Tools for working with source code.
 ### clock.sh
@@ -41,7 +47,7 @@ A template for the license I use for my code.
 ### ljbbsmilies.user.js
 Adds the ability to use phpBB style emoticons when posting or commenting on LiveJournal.com.
 ### mandelbrot.c
-Visualization of the [Mandelbrot Set!](http://en.wikipedia.org/wiki/Mandelbrot_set).
+Visualization of the [Mandelbrot Set](http://en.wikipedia.org/wiki/Mandelbrot_set).
 
 ![Screenshot of the Mandelbrot Set visualzation](https://raw.githubusercontent.com/S010/misc/master/mandelbrot.png)
 ### plasma.c
