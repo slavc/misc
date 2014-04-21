@@ -46,6 +46,7 @@ fi
 
 # start some nice programs
 
+xsetroot -solid black
 xrdb -merge ~/.Xresources_solarized_dark
 ~/bin/xsetbg -center /home/slava/misc/wallpapers/Cute-Puffer-Fish-Desktop-Wallpaper.jpg &
 xset +fp /usr/local/lib/X11/fonts/terminus
@@ -53,7 +54,7 @@ xset dpms 0 0 600
 setxkbmap -layout lv,ru -variant ,winkeys -option grp:caps_toggle -option grp_led:caps
 xset b off
 xset r rate 400 50
-cwm || xterm
+$HOME/src/cwm/cwm || xterm
 
 
 if [ "$SSH_AGENT_PID" ]; then

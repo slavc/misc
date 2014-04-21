@@ -22,15 +22,7 @@ alias ls='/usr/local/bin/colorls -G'
 
 ulimit -d $(expr 1024 \* 2048)
 
-vcl() {
-    local cmd='gvim --servername ${GVIM_SERVER:=GVIM_$$} --remote-silent'
-    while [ $# -gt 0 ]; do
-        local filename=${1%:*}
-        local lineno=${1##*:}
-        if [ "$lineno" != "$filename" ]; then
-            local lineopt="+${lineno}"
-        fi
-        eval $cmd "$lineopt" "$filename"
-        shift
-    done
-}
+GVIM_SERVER=GVIM_$$
+export GVIM_SERVER 
+export CSCOPE_EDITOR=$HOME/bin/vcl
+

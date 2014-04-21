@@ -1,8 +1,8 @@
 command term "xterm -geometry 110x40"
 moveamount 8 
 snapdist 8
-bind M-Prior "mixerctl -q outputs.master=+10"
-bind M-Next "mixerctl -q outputs.master=-10"
+bind M-Prior "mixerctl -q outputs.hp=+1"
+bind M-Next "mixerctl -q outputs.hp=-10"
 borderwidth 2
 bind M-period unmap
 bind M-comma ssh
