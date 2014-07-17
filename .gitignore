@@ -1,0 +1,4 @@
+tools/hex
+tools/hex.o
+tools/color
+tools/color.o

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+cscope_opts='-Rqbu'
+ctags_opts='-R'
+
+function make_cscope_dir_args() {
+    args=''
+    for i in "$@"; do
+        args="$args '-s$i'"
+    done
+}
+
+while true; do 
+    if [ "$1" == '-k' ]; then
+        cscope_opts="$cscope_opts -k"
+    else
+        break
+    fi
+    shift
+done
+
+if [ $# -eq 0 ]; then
+    set '.'
+fi
+
+ctags $ctags_opts "$@"
+cscope $cscope_opts `make_cscope_dir_args "$@"`

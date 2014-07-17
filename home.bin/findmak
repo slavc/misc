@@ -1,0 +1,6 @@
+#!/bin/sh
+
+where=${1:-.}
+shift
+
+exec find "$where" -type f -a \( -iname '*mak*' -o -iname '*.mk' \) "$@"

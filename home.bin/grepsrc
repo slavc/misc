@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ $# -eq 1 ]; then
+    where=.
+else
+    where=${1:-.}
+    shift
+fi
+
+exec findsrc "$where" -exec egrep -n "$@" /dev/null \{\} \;

@@ -8,8 +8,13 @@ function op_file() {
 
     case "$type" in
     pdf|ps|djvu)
-        evince "$path" > /dev/null 2>&1 &
-        disown
+        for prog in evince mupdf; do
+            if which "$prog" > /dev/null 2>&1; then
+                $prog "$path" > /dev/null 2>&1 &
+                disown
+                break
+            fi
+        done
         ;;
     chm)
         xchm "$path" > /dev/null 2>&1 &
@@ -19,7 +24,7 @@ function op_file() {
         firefox "$path" > /dev/null 2>&1 &
         disown
         ;;
-    odt|doc|xls)
+    odt|doc|xls|docx)
         ooffice "$path" > /dev/null 2>&1 &
         disown
         ;;

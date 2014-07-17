@@ -1,19 +1,13 @@
-fontname "DejaVu Sans Mono:style=bold:size=12"
-color activeborder PaleGreen2
-color inactiveborder PaleGreen4
-color font PaleGreen2
-color menufg PaleGreen2
-color menubg black
-snapdist 5
-moveamount 5
-borderwidth 1
-
+command term "xterm -geometry 110x40"
+moveamount 8 
+snapdist 8
+bind M-Prior "mixerctl -q outputs.hp=+1"
+bind M-Next "mixerctl -q outputs.hp=-10"
+borderwidth 2
 bind M-period unmap
 bind M-comma ssh
-
-bind M-Prior "amixer sset Master 3%+"
-bind M-Next "amixer sset Master 3%-"
-bind M-End "amixer sset Master toggle"
-bind XF86AudioRaiseVolume "amixer sset Master 3%+"
-bind XF86AudioLowerVolume "amixer sset Master 3%-"
-bind XF86AudioMute "amixer sset Master toggle"
+color menubg rgb:00/2b/36
+color menufg rgb:83/94/96
+color font rgb:83/94/96
+color activeborder rgb:58/6e/75
+color inactiveborder rgb:93/a1/a1

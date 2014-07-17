@@ -1,0 +1,7 @@
+#!/bin/sh
+
+ncols=`tput cols`
+echo -ne '\e[1;32m'
+awk 'BEGIN { for (i=0; i < '${ncols}'; ++i) printf("-"); }'
+echo -e '\e[0m'
+

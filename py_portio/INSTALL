@@ -1,0 +1,7 @@
+1) Install Python (if on Linux, you'll need -devel package too)
+2) Make sure 'python' command works (you may need to make a symlink 
+   such as /usr/bin/python -> /usr/bin/python2.6)
+3) Run 'make install' from root
+
+That's it, now you can 'import portio' in your programs.
+

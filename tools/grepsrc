@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# grepsrc
+# grepsym
+# grepisrc
+# grepsym
+
+# grep source code files.
+# Modifiers:
+#  *i* -- ignore case.
+#  *sym -- search for a whole word.
+
+if [ $# -eq 0 ]; then
+    echo "usage: $0 <needle> [<dir1> <dir2>...]" 2>&1
+    exit 1
+fi
+
+progname=${0##*/}
+
+needle="$1"
+
+case "$progname" in
+grepi*)
+    grepopts="${grepopts} -i"
+    coloropts="${coloropts} -i"
+    ;;
+esac
+
+case "$progname" in
+*sym)
+    needle="\<${needle}\>"
+    ;;
+esac
+
+case "$progname" in
+grep*mak)
+    findcmd=findmak
+    ;;
+*)
+    findcmd=findsrc
+    ;;
+esac
+
+shift
+
+$findcmd "$@" | sort | xargs grep -E -n $grepopts "$needle" /dev/null | color $coloropts green "$needle"
+

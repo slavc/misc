@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# findsrc and findmak.
+
+# Output paths of source code or make files found in directories given as
+# arguments or in current directory.
+
+if [ $# -eq 0 ]; then
+    set "."
+fi
+
+case "$0" in
+*findsrc)
+    searchexpr="-iname '*.c'    \
+        -o -iname '*.h'         \
+        -o -iname '*.cpp'       \
+        -o -iname '*.hpp'       \
+        -o -iname '*.cxx'       \
+        -o -iname '*.hxx'       \
+        -o -iname '*.java'      \
+        -o -iname '*.s'"
+    ;;
+*findmak)
+    searchexpr="-iname '*cmakelists*' -o -iname '*.cmake' -o -iname '*makefile' -o -iname '*.mk'"
+    ;;
+esac
+
+while [ $# -gt 0 ]; do
+    if [ -d "$1" ]; then
+        eval find "$1" -type f '\(' $searchexpr '\)'
+    else
+        echo "$1"
+    fi
+    shift
+done
