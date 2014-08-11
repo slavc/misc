@@ -8,7 +8,7 @@ def path2varname(path):
     path = os.path.basename(path)
     s = ''
     for c in path:
-        if c in string.ascii_letters:
+        if c in string.ascii_letters or c in string.digits:
             s += c
         else:
             s += '_'
