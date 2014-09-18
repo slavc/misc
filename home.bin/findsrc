@@ -1,6 +1,0 @@
-#!/bin/sh
-
-where=${1:-.}
-shift
-
-find "$where" -type f \( -iname '*.c' -o -iname '*.h' -o -iname '*.cpp' -o -iname '*.hpp' -o -iname '*.cxx' -o -iname '*.hxx' -o -iname '*.java' \) "$@" | sort
