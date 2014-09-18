@@ -79,7 +79,7 @@ yum -y install \
 || error 'failed to install useful packages'
 
 
-cat > /etc/profile.d/local.sh <<"EOF"
+cat > /etc/profile.d/zzz_local.sh <<"EOF"
 #!/bin/sh
 
 alias vcl='gvim --servername ${GVIM_SERVER:=GVIM_$$} --remote-silent'
