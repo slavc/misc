@@ -1,6 +1,9 @@
-pgrep gnome-settings-daemon >/dev/null || /usr/libexec/gnome-settings-daemon &
+#!/bin/sh
+
+#pgrep gnome-settings-daemon > /dev/null || /usr/libexec/gnome-settings-daemon &
 xset +fp /usr/share/fonts/artwiz-aleczapka
-xrdb -load ~/.Xresources_solarized_light
+xrdb -merge ~/.Xresources
+xrdb -merge ~/.Xresources_solarized_dark
 
 {
     sleep 6
@@ -20,7 +23,7 @@ xrdb -load ~/.Xresources_solarized_light
 eval `ssh-agent`
 ssh-add ~/.ssh/*_rsa
 
-i3 || xterm
+${HOME}/src/cwm/cwm || xterm
 
 ssh-add -D
 ssh-agent -k
