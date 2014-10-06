@@ -3,9 +3,11 @@
  *  + priority
  *  + nice
  *  + real-time priority
- *  + scheduling mode
+ *  + scheduling policy
  */
 
+#include <linux/sched.h>
+#include <sched.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <err.h>
@@ -40,6 +42,27 @@ isstrdigit(const char *s)
 	return *s == '\0';
 }
 
+static const char *
+policytostr(int policy)
+{
+	static char	 buf[16];
+
+#define Y(a)			\
+	case a:			\
+		return #a
+	switch (policy) {
+	Y(SCHED_OTHER);
+	Y(SCHED_BATCH);
+	Y(SCHED_IDLE);
+	Y(SCHED_FIFO);
+	Y(SCHED_RR);
+	}
+#undef Y
+
+	(void) snprintf(buf, sizeof buf, "%d", policy);
+	return buf;
+}
+
 static void
 psprio(void)
 {
@@ -63,12 +86,13 @@ psprio(void)
 			continue;
 		if (!procstat_get(pid, &ps))
 			warnx("procstat_get %lu", (unsigned long) pid);
-		printf("%lu\t%32s\t%llu\t%llu\t%llu\n",
+		printf("%lu\t%32s\t%lld\t%lld\t%lld\t%s\n",
 		    (unsigned long) ps.pid,
 		    ps.name,
 		    ps.priority,
 		    ps.nice,
-		    ps.rt_priority);
+		    ps.rt_priority,
+		    policytostr(ps.policy));
 	}
 
 	if (closedir(dp) < 0)

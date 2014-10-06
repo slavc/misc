@@ -83,7 +83,7 @@ procstat_parse(const char *s, struct procstat *ps)
 		} else if (*fieldp == &ps->state) {
 			*((char *) *fieldp) = *++s;
 			++s;
-		} else if (*fieldp != NULL) {
+		} else {
 			errno = 0;
 			val = strtoull(s, &endptr, 10);
 			s = endptr;
@@ -91,7 +91,8 @@ procstat_parse(const char *s, struct procstat *ps)
 				return false;
 			if (val == 0 && errno == EINVAL)
 				return false;
-			*((unsigned long long *) *fieldp) = val;
+			if (*fieldp != NULL)
+				*((unsigned long long *) *fieldp) = (long long) val;
 		}
 		++fieldp;
 	}
