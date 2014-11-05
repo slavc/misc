@@ -1,13 +1,16 @@
 command term "xterm -geometry 110x40"
 moveamount 8 
 snapdist 8
-bind M-Prior "mixerctl -q outputs.hp=+1"
-bind M-Next "mixerctl -q outputs.hp=-10"
+bind M-Prior "sound.sh +"
+bind M-Next "sound.sh -"
+bind XF86AudioRaiseVolume "sound.sh +"
+bind XF86AudioLowerVolume "sound.sh -"
+bind XF86AudioMute "sound.sh mute"
 borderwidth 2
 bind M-period unmap
 bind M-comma ssh
 color menubg rgb:00/2b/36
 color menufg rgb:83/94/96
 color font rgb:83/94/96
-color activeborder rgb:58/6e/75
-color inactiveborder rgb:93/a1/a1
+color inactiveborder rgb:58/6e/75
+color activeborder rgb:93/a1/a1

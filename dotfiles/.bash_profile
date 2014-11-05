@@ -9,6 +9,7 @@ fi
 
 PATH=$HOME/bin:$HOME/opt/bin:$PATH
 CSCOPE_EDITOR=$HOME/bin/vcl
+GOPATH=$HOME/src/go
 
-export PATH CSCOPE_EDITOR
+export PATH CSCOPE_EDITOR GOPATH
 
