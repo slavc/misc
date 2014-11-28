@@ -394,6 +394,7 @@ au BufNewFile,BufRead *.rdf set filetype=xml
 au BufNewFile,BufRead *.xbl set filetype=xml
 au BufNewFile,BufRead *.xul set filetype=xml
 au BufNewFile,BufRead *.zcpp set filetype=cpp
+au BufNewFile,BufRead *.h set filetype=h
 colorscheme default
 filetype on
 map <C-c> "+y
@@ -413,7 +414,7 @@ nmap <Tab> :bn!<CR>
 nmap <S-Tab> :bp!<CR>
 set comments+=://!
 set ai
-set background=dark
+set background=light
 set cindent
 set cinoptions=:0
 set directory=~/.vim/tmp
