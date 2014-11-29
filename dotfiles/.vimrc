@@ -1,4 +1,4 @@
-source /etc/vimrc
+"source /etc/vimrc
 " Sets how many lines of history VIM has to remember
 set history=700
 " Enable filetype plugins
@@ -395,6 +395,7 @@ au BufNewFile,BufRead *.xbl set filetype=xml
 au BufNewFile,BufRead *.xul set filetype=xml
 au BufNewFile,BufRead *.zcpp set filetype=cpp
 au BufNewFile,BufRead *.h set filetype=h
+au BufNewFile,BufRead *.go set filetype=go
 colorscheme default
 filetype on
 map <C-c> "+y
