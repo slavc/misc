@@ -20,6 +20,13 @@
  * Print args in binary, character, decimal, hexadecimal and octal notation.
  */
 
+
+/*
+ * FIXME
+ *
+ * 0x1b is translated into dec incorrectly.
+ */
+
 #include <unistd.h>
 #include <err.h>
 
