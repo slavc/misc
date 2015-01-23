@@ -445,7 +445,7 @@ set vb t_vb=
 set wildchar=<Tab> wildmenu wildmode=full
 set wildcharm=<C-Z>
 set colorcolumn=80
-syntax on
+"syntax on
 set mouse=a
 set noswapfile
 set autoread
