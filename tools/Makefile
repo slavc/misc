@@ -1,6 +1,6 @@
 .PHONY: install
 
-CFLAGS=-O2 -g -Wall
+CFLAGS=-O2 -g -Wall -std=c99 -D_XOPEN_SOURCE=700
 
 all: findsrc grepsrc color hex
 
