@@ -180,10 +180,12 @@ print_bin(unsigned long long n)
 static void
 print_chr(unsigned long long n)
 {
-	if (n < 256)
-		printf("'%c'\n", (char) n);
-	else
+	if (n > ~(unsigned char)0)
 		printf("U+%04x\n", (unsigned int) n);
+	else if (isgraph((char)n))
+		printf("'%c'\n", (char)n);
+	else
+		printf(".\n");
 }
 
 static void
