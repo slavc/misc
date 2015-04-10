@@ -18,10 +18,14 @@ case "$0" in
         -o -iname '*.cxx'       \
         -o -iname '*.hxx'       \
         -o -iname '*.java'      \
-        -o -iname '*.s'"
+        -o -iname '*.s'         \
+        -o -iname '*.inc'"
     ;;
 *findmak)
-    searchexpr="-iname '*cmakelists*' -o -iname '*.cmake' -o -iname '*makefile' -o -iname '*.mk'"
+    searchexpr="-iname '*cmakelists*'   \
+        -o -iname '*.cmake'             \
+        -o -iname '*makefile'           \
+        -o -iname '*.mk'"
     ;;
 esac
 
