@@ -13,6 +13,7 @@ install: findsrc grepsrc indexsrc color hex
 	install -m 700 color "${HOME}/bin"
 	install -m 700 hex "${HOME}/bin"
 	install -m 700 data2c.py "${HOME}/bin"
+	install -m 700 colorize_diff.awk "${HOME}/bin"
 	ln -fs "${HOME}/bin/findsrc" "${HOME}/bin/findmak"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepisrc"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepsym"
