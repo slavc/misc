@@ -19,7 +19,7 @@ case "$0" in
         -o -iname '*.hxx'       \
         -o -iname '*.java'      \
         -o -iname '*.py'        \
-        -o -iname '*.s'"        \
+        -o -iname '*.s'         \
         -o -iname '*.inc'"
     ;;
 *findmak)
