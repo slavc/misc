@@ -7,4 +7,4 @@ XLock.mode: blank
 XTerm*loginShell: true
 XTerm*scrollBar: false
 XTerm*saveLines: 2048
-XTerm*internalBorder: 0
+XTerm*internalBorder: 1

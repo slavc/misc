@@ -13,7 +13,7 @@ case "$os" in
 *linux*)
     case "$1" in
     +)
-        amixer sset Master 1%+
+        amixer sset Master 3%+
         ;;
     -)
         amixer sset Master 3%-

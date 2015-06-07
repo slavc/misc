@@ -7,9 +7,10 @@ fi
 
 # User specific environment and startup programs
 
-PATH=$HOME/bin:$HOME/opt/bin:$PATH
+PATH=/usr/java/latest/bin:$HOME/bin:$HOME/opt/bin:$PATH
 CSCOPE_EDITOR=$HOME/bin/vcl
 GOPATH=$HOME/src/go
+USE_CCACHE=1
 
-export PATH CSCOPE_EDITOR GOPATH
+export PATH CSCOPE_EDITOR GOPATH USE_CCACHE
 

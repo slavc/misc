@@ -3,7 +3,7 @@
 #pgrep gnome-settings-daemon > /dev/null || /usr/libexec/gnome-settings-daemon &
 xset +fp /usr/share/fonts/artwiz-aleczapka
 xrdb -merge ~/.Xresources
-xrdb -merge ~/.Xresources_solarized_dark
+xrdb -merge ~/.Xresources_solarized_light
 
 {
     sleep 6

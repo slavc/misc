@@ -74,6 +74,8 @@ Simple music sequencer/synthesizer.
 A TCP passthrough which allows to monitor communication between two endpoints.
 ### tnamed.c
 Maintains /etc/hosts file adding hostnames which are also running tnamed.
+### touchscreen.c
+Routines for touchscreen calibration and coordinate transformation.
 ### tone.c
 Tone generator (selectable waveform and frequency).
 ### unixtime.c

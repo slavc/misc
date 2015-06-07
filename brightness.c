@@ -1,5 +1,5 @@
 /*
- * Adjust brightness of a laptop screen.
+ * Smoothly adjust brightness of a laptop screen.
  */
 
 #include <stdio.h>
@@ -7,7 +7,8 @@
 
 #define BRIGHTNESS_PATH		"/sys/devices/pci0000:00/0000:00:02.0/drm/card0/card0-LVDS-1/intel_backlight/brightness"
 #define MAX_BRIGHTNESS_PATH	"/sys/devices/pci0000:00/0000:00:02.0/drm/card0/card0-LVDS-1/intel_backlight/max_brightness"
-#define NUM_STEPS		20
+#define NUM_STEPS		30
+#define TRANS_TIME		(200 * 1000) // us
 
 static void
 usage(void)
@@ -46,6 +47,33 @@ write_int(const char *path, int i)
 	return 0;
 }
 
+static int
+transition(int cur, int desired, int duration)
+{
+	int	 delta;
+	int	 step;
+	int	 delay;
+
+	delta = desired - cur;
+	if (delta == 0)
+		return 0;
+	else if (delta < 0) {
+		delta = -delta;
+		step = -1;
+	} else
+		step = 1;
+
+	delay = duration / delta;
+
+	while (cur != desired) {
+		cur += step;
+		if (write_int(BRIGHTNESS_PATH, cur) == -1)
+			return -1;
+		usleep(delay);
+	}
+	return 0;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -56,6 +84,7 @@ main(int argc, char **argv)
 
 	int	 cur;
 	int	 max;
+	int	 desired;
 	int	 delta;
 
 	cur = read_int(BRIGHTNESS_PATH);
@@ -67,21 +96,21 @@ main(int argc, char **argv)
 
 	while (++argv, --argc) {
 		if (**argv == '+')
-			cur += delta;
+			desired = cur + delta;
 		else if (**argv == '-')
-			cur -= delta;
+			desired = cur - delta;
 		else {
 			usage();
 			return 1;
 		}
 	}
 
-	if (cur > max)
-		cur = max;
-	else if (cur < 0)
-		cur = 0;
+	if (desired > max)
+		desired = max;
+	else if (desired < 0)
+		desired = 0;
 
-	if (write_int(BRIGHTNESS_PATH, cur) == -1)
+	if (transition(cur, desired, TRANS_TIME) == -1)
 		return 1;
 	return 0;
 }

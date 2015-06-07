@@ -6,11 +6,14 @@ bind M-Next "sound.sh -"
 bind XF86AudioRaiseVolume "sound.sh +"
 bind XF86AudioLowerVolume "sound.sh -"
 bind XF86AudioMute "sound.sh mute"
-borderwidth 2
+bind XF86MonBrightnessUp "brightness +"
+bind XF86MonBrightnessDown "brightness -"
+borderwidth 1
 bind M-period unmap
 bind M-comma ssh
+bind CM-o "i3lock"
 color menubg rgb:00/2b/36
 color menufg rgb:83/94/96
 color font rgb:83/94/96
-color inactiveborder rgb:58/6e/75
-color activeborder rgb:93/a1/a1
+color activeborder rgb:58/6e/75
+color inactiveborder rgb:93/a1/a1
