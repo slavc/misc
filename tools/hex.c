@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Sviatoslav Chagaev <sviatoslav.chagaev@gmail.com>
+ * Copyright (c) 2013, 2015 Sviatoslav Chagaev <sviatoslav.chagaev@gmail.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,14 +17,7 @@
 /*
  * hex
  *
- * Print args in binary, character, decimal, hexadecimal and octal notation.
- */
-
-
-/*
- * FIXME
- *
- * 0x1b is translated into dec incorrectly.
+ * Print arg(s) in binary, character, decimal, hexadecimal and octal notation.
  */
 
 #include <unistd.h>
@@ -180,10 +173,12 @@ print_bin(unsigned long long n)
 static void
 print_chr(unsigned long long n)
 {
-	if (n < 256)
-		printf("'%c'\n", (char) n);
-	else
+	if (n > ~(unsigned char)0)
 		printf("U+%04x\n", (unsigned int) n);
+	else if (isgraph((char)n))
+		printf("'%c'\n", (char)n);
+	else
+		printf(".\n");
 }
 
 static void

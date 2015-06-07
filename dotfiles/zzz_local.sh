@@ -6,7 +6,7 @@ if [ `id -u` -eq 0 ]; then
 fi
 if [ -x /usr/local/bin/prompt ]; then
     export COLUMNS
-    PS1='$(/usr/local/bin/prompt -B -f'${ps1fg}' -b white \w\%\j)\n'
+    PS1='$(/usr/local/bin/prompt -B -f'${ps1fg}' -b white "\w"\%\j)\n'
 else
     PS1='\[\e[1;'${ps1fg}'m\]\w:\j \[\e[0m\]'
 fi

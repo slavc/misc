@@ -1,5 +1,5 @@
 source ~/.vimrc
-set gfn=Deja\ Vu\ Sans\ Mono\ 9
+set gfn=Terminus\ 9
 set bg=light
 colorscheme solarized
 set guioptions+=c " console dialogs for simple choices
@@ -12,3 +12,4 @@ set guioptions-=L
 set guioptions-=e
 set guioptions+=a " automatically copy selection to clipboard
 set cursorline
+syntax on
