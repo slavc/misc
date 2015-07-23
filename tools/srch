@@ -18,7 +18,7 @@ class Params:
 def main(args):
     params = Params()
     while args:
-        token = args.pop()
+        token = args.pop(0)
         if not params.file and token == 'file':
             params.file = True
         elif not params.dir and token == 'dir':
@@ -26,7 +26,7 @@ def main(args):
         elif not params.case and token == 'case':
             params.case = True
         elif token == 'in' and args:
-            params.paths(args.pop())
+            params.paths.append(args.pop(0))
         else:
             params.keys.append(token)
     if not params.paths:
@@ -64,6 +64,7 @@ def search(params):
         args.append(')')
 
     # print('%s' % str(args))
+    os.close(sys.stderr.fileno())
     os.execvp('find', args)
 
 if __name__ == '__main__':
