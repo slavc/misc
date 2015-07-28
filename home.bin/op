@@ -2,7 +2,7 @@
 
 # Open file(s) in the appropriate program.
 
-function op_file() {
+op_file() {
     type=$(echo "$1" | tr '[:upper:]' '[:lower:]')
     path="$2"
 
@@ -11,22 +11,22 @@ function op_file() {
         for prog in evince mupdf; do
             if which "$prog" > /dev/null 2>&1; then
                 $prog "$path" > /dev/null 2>&1 &
-                disown
+                disown >/dev/null 2>&1
                 break
             fi
         done
         ;;
     chm)
         xchm "$path" > /dev/null 2>&1 &
-        disown
+        disown >/dev/null 2>&1
         ;;
     html|htm)
         firefox "$path" > /dev/null 2>&1 &
-        disown
+        disown >/dev/null 2>&1
         ;;
     odt|doc|xls|docx)
         ooffice "$path" > /dev/null 2>&1 &
-        disown
+        disown >/dev/null 2>&1
         ;;
     *)
         echo "$path: don't know how to open a $type file" 1>&2

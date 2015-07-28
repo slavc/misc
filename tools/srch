@@ -1,18 +1,71 @@
-#!/bin/sh
+#!/usr/bin/python3
+#
+# Wrapper for find(1) which translates close to natural language queries to 
+# find(1)'s language.
+#
 
-function err() {
-    echo "${0##*/}: $2" 1>&2
-    exit $1
-}
+import sys
+import os
 
-function usage() {
-    echo "usage: ${0##*/} [-x] [-I] <filename_pattern> [<where_to_look> ...]"
-    exit $1
-}
+class Params:
+    def __init__(self):
+        self.file = False
+        self.dir = False
+        self.case = False
+        self.paths = []
+        self.keys = []
 
-args=`getopt xI "$@"`
-if [ $# -ne 0 ]; then
-    usage 1
-fi
+def main(args):
+    params = Params()
+    while args:
+        token = args.pop(0)
+        if not params.file and token == 'file':
+            params.file = True
+        elif not params.dir and token == 'dir':
+            params.dir = True
+        elif not params.case and token == 'case':
+            params.case = True
+        elif token == 'in' and args:
+            params.paths.append(args.pop(0))
+        else:
+            params.keys.append(token)
+    if not params.paths:
+        params.paths = ['.']
+    search(params)
 
-# TODO
+def usage():
+    print('usage: %s [file] [dir] [in <path>] [key1 key2 ... keyN]' % sys.argv[0])
+
+def search(params):
+    args = ['find']
+
+    args.extend(params.paths)
+
+    if params.file and params.dir:
+        args.append(['(', '-type', 'f', '-type', 'd', ')'])
+    elif params.file:
+        args.extend(['-type', 'f'])
+    elif params.dir:
+        args.extend(['-type', 'd'])
+
+    nameopt = '-iname'
+    if params.case:
+        nameopt = '-name'
+
+    if params.keys:
+        key_args = []
+        for key in params.keys:
+            if key_args:
+                key_args.append('-or')
+            key_args.append(nameopt)
+            key_args.append(key)
+        args.append('(')
+        args.extend(key_args)
+        args.append(')')
+
+    # print('%s' % str(args))
+    os.close(sys.stderr.fileno())
+    os.execvp('find', args)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
