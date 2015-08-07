@@ -15,12 +15,18 @@ install: findsrc grepsrc indexsrc color hex
 	install -m 700 data2c.py "${HOME}/bin"
 	install -m 700 colorize_diff.awk "${HOME}/bin"
 	install -m 700 srch "${HOME}/bin"
+	install -m 700 mgrep "${HOME}/bin"
 	ln -fs "${HOME}/bin/findsrc" "${HOME}/bin/findmak"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepisrc"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepsym"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepisym"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepmak"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepimak"
+	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepisrc"
+	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepsym"
+	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepisym"
+	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepmak"
+	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepimak"
 
 uninstall:
 	rm -f "${HOME}/bin/{findsrc,grepsrc,indexsrc,uniqsrc,findmak,grepisrc,grepsym,grepisym,grepmak,grepimak,color,hex,data2c.py,srch}"

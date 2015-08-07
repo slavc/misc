@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# grep(1) with a menu.
+#
+
+: ${MGREP_ACTION:=vcl}
+
+GREP_ARGS="-n"
+PROMPT_STRING="mgrep> "
+NORMAL_IFS="$IFS"
+SPECIAL_IFS=`echo -ne '\036'`
+
+prog=${0##*/}
+
+results=""
+case "$prog" in
+mgrep*src|mgrep*mak|mgrep*sym)
+    cmd=${prog#m}
+    echo $cmd
+    results=`$cmd "$@"|tr '\n' '\036'`
+    ;;
+*)
+    results=`grep $GREP_ARGS "$@"|tr '\n' '\036'`
+    ;;
+esac
+
+list_results() {
+    IFS="$SPECIAL_IFS"
+    i=1
+    for line in $results; do
+        printf '%2d| %s\n' $i "$line"
+        i=$(($i+1))
+    done
+    IFS="$NORMAL_IFS"
+}
+
+list_results
+while true; do
+    echo -n "$PROMPT_STRING"
+    read input
+    case "$input" in
+    q*|Q*|"")
+        exit 0
+        ;;
+    [1-9]*)
+        IFS="$SPECIAL_IFS"
+        set -- $results
+        IFS="$NORMAL_IFS"
+        eval result_line=\$\{$input\}
+        file_path=`echo "$result_line" | cut -f 1 -d ':'`
+        line_no=`echo "$result_line" | cut -f 2 -d ':'`
+        $MGREP_ACTION "${file_path}:${line_no}"
+        ;;
+    l*)
+        list_results
+        ;;
+    h*|\?*)
+        echo 'q | ^D | ^C -- quit'
+        echo '<number>    -- open the result at line <number>'
+        echo 'l           -- list results'
+        ;;
+    *)
+        continue
+        ;;
+    esac
+done
