@@ -2,12 +2,13 @@
  * Smoothly adjust brightness of a laptop screen.
  */
 
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BRIGHTNESS_PATH		"/sys/devices/pci0000:00/0000:00:02.0/drm/card0/card0-LVDS-1/intel_backlight/brightness"
-#define MAX_BRIGHTNESS_PATH	"/sys/devices/pci0000:00/0000:00:02.0/drm/card0/card0-LVDS-1/intel_backlight/max_brightness"
-#define NUM_STEPS		30
+#define BRIGHTNESS_PATH		"/sys/devices/pci0000:00/0000:00:02.0/backlight/acpi_video0/brightness"
+#define MAX_BRIGHTNESS_PATH	"/sys/devices/pci0000:00/0000:00:02.0/backlight/acpi_video0/max_brightness"
+#define NUM_STEPS		15
 #define TRANS_TIME		(200 * 1000) // us
 
 static void
