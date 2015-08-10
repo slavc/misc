@@ -22,6 +22,7 @@ install: findsrc grepsrc indexsrc color hex
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepisym"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepmak"
 	ln -fs "${HOME}/bin/grepsrc" "${HOME}/bin/grepimak"
+	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepsrc"
 	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepisrc"
 	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepsym"
 	ln -fs "${HOME}/bin/mgrep" "${HOME}/bin/mgrepisym"
