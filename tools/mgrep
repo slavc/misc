@@ -28,7 +28,7 @@ list_results() {
     IFS="$SPECIAL_IFS"
     i=1
     for line in $results; do
-        printf '%2d| %s\n' $i "$line"
+        printf '%3d| %s\n' $i "$line"
         i=$(($i+1))
     done
     IFS="$NORMAL_IFS"
