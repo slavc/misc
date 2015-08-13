@@ -159,9 +159,9 @@ main(int argc, char **argv)
 	 * Display coordinates of 3 calibration points.
 	 */
 	struct point disp_points[] = {
-		{ 65, 350 },
-		{ 200, 195 },
-		{ 195, 550 }
+		{ 229, 65 },
+		{ 285, 476 },
+		{ 58, 681 }
 	};
 
 	/*
@@ -169,15 +169,27 @@ main(int argc, char **argv)
 	 * calibration points.
 	 */
 	struct point ts_points[] = {
-		{ 650, 2000 },
-		{ 2800, 1350 },
-		{ 2640, 3500 }
+		{ 242, 70 },
+		{ 190, 381 },
+		{ 414, 546 }
 	};
 
-	float	 affine_m[2][3];
+	float	 affine_m[2][3] = {
+		{ 1.0, 0.0, 0.0 },
+		{ 0.0, 1.0, 0.0 }
+	};
 
 	if (!compute_affine_xform_matrix(disp_points, ts_points, affine_m))
 		errx(1, "failed to compute affine transformation matrix");
+
+	printf(
+	    "matrix = {\n"
+	    "  { %f %f %f }\n"
+	    "  { %f %f %f }\n"
+	    "}\n",
+	    affine_m[0][0], affine_m[0][1], affine_m[0][2],
+	    affine_m[1][0], affine_m[1][1], affine_m[1][2]
+	);
 
 	/*
 	 * Now feed the touchscreen coordinates to transformation function. On
