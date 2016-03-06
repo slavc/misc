@@ -2,6 +2,7 @@
 
 install:
 	cp -R .vim ~
+	cp .Xmodmap ~
 	cp .Xresources ~
 	cp .Xresources_solarized_dark ~
 	cp .Xresources_solarized_light ~
