@@ -54,7 +54,7 @@ xset dpms 0 0 600
 setxkbmap -layout lv,ru -variant ,winkeys -option grp:caps_toggle -option grp_led:caps
 xset b off
 xset r rate 400 50
-$HOME/src/cwm/cwm || xterm
+$HOME/src/cwm/cwm || cwm || xterm
 
 
 if [ "$SSH_AGENT_PID" ]; then
