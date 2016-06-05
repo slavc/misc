@@ -1,11 +1,11 @@
 command term "xterm -geometry 110x40"
 moveamount 8 
 snapdist 8
-bind M-Prior "sound.sh +"
-bind M-Next "sound.sh -"
-bind XF86AudioRaiseVolume "sound.sh +"
-bind XF86AudioLowerVolume "sound.sh -"
-bind XF86AudioMute "sound.sh mute"
+bind M-Prior "volume.sh +"
+bind M-Next "volume.sh -"
+bind XF86AudioRaiseVolume "volume.sh +"
+bind XF86AudioLowerVolume "volume.sh -"
+bind XF86AudioMute "volume.sh mute"
 #bind XF86MonBrightnessUp "brightness +"
 #bind XF86MonBrightnessDown "brightness -"
 borderwidth 2
