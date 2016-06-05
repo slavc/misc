@@ -1,7 +1,7 @@
 #!/bin/sh
 
 progname=${0##*/}
-screenshotdir="$HOME/Pictures/screenshots"
+screenshotdir="$HOME/screenshots"
 screenshotext="png"
 
 error() {
@@ -19,7 +19,7 @@ if ! which import > /dev/null; then
     error "import command not found, nothing to take screenshot with"
 fi
 
-mkdir -p ~/Pictures/screenshots || error "failed to create $screenshotdir directory"
+mkdir -p "$screenshotdir" || error "failed to create $screenshotdir directory"
 
 fullscreen=0
 
@@ -37,6 +37,7 @@ while [ $# -gt 0 ]; do
         exit 1
         ;;
     esac
+    shift
 done
 
 n_images=`ls "$screenshotdir"/*$screenshotext | wc -l`
