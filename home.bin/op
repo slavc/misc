@@ -17,7 +17,7 @@ op_file() {
 
     case "$type" in
     pdf|ps|djvu)
-        for prog in evince mupdf; do
+        for prog in evince mupdf xpdf; do
             if which "$prog" > /dev/null 2>&1; then
                 $prog "$path" > /dev/null 2>&1 &
                 $disown_cmd
@@ -34,7 +34,7 @@ op_file() {
         $disown_cmd
         ;;
     odt|doc|xls|docx)
-        ooffice "$path" > /dev/null 2>&1 &
+        libreoffice "$path" > /dev/null 2>&1 &
         $disown_cmd
         ;;
     *)
