@@ -12,6 +12,7 @@ install:
 	cp .kshrc ~
 	cp .nexrc ~
 	cp .profile ~
+	cp .synclient ~
 	cp .tmux.conf ~
 	cp .vimrc ~
 	cp .xinitrc ~
