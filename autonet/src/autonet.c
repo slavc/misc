@@ -143,8 +143,11 @@ run_script(const char *name, const char *ifname)
 
 	if (pid == -1)
 		err(1, "fork");
-	if (pid > 0)
+	if (pid > 0) {
+		if (wait(NULL) == -1)
+			err(1, "wait");
 		return;
+	}
 
 	if (execl(path, path, ifname, NULL) == -1)
 		err(1, "execl");
