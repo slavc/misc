@@ -1,0 +1,10 @@
+#!/bin/sh
+
+echo interface $1 attached
+
+case "$1" in
+urndis*)
+    ifconfig $1 up
+    dhclient $1
+    ;;
+esac
