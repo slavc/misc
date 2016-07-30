@@ -14,6 +14,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <unistd.h>
+
 #include "lisp.h"
 #include "eval.h"
 #include "mem.h"
