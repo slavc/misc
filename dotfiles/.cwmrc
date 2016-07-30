@@ -1,6 +1,10 @@
 command term "xterm -geometry 110x40"
 moveamount 8 
 snapdist 8
+bind M-F1 "xbacklight -dec 5"
+bind M-F2 "xbacklight -inc 5"
+bind M-F11 "volume.sh -"
+bind M-F12 "volume.sh +"
 bind M-Prior "volume.sh +"
 bind M-Next "volume.sh -"
 bind XF86AudioRaiseVolume "volume.sh +"
@@ -8,7 +12,7 @@ bind XF86AudioLowerVolume "volume.sh -"
 bind XF86AudioMute "volume.sh mute"
 #bind XF86MonBrightnessUp "brightness +"
 #bind XF86MonBrightnessDown "brightness -"
-borderwidth 2
+borderwidth 1
 bind M-period unmap
 bind M-comma ssh
 bind CM-o "i3lock"
