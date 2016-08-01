@@ -1,0 +1,79 @@
+# Conky, a system monitor, based on torsmo
+#
+# Any original torsmo code is licensed under the BSD license
+#
+# All code written since the fork of torsmo is licensed under the GPL
+#
+# Please see COPYING for details
+#
+# Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
+# Copyright (c) 2005-2010 Brenden Matthews, Philip Kovacs, et. al. (see AUTHORS)
+# All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+alignment top_left
+background yes
+border_width 1
+cpu_avg_samples 2
+default_bar_size 0 6
+# default_color 9ebed2
+default_color ccd0ff
+default_outline_color 081852
+default_shade_color 000000
+double_buffer yes
+draw_borders no
+draw_graph_borders yes
+draw_outline no
+draw_shades yes
+#use_xft yes
+#xftfont lime:size=8
+#xftalpha 0
+font -*-lime-*-*-*-*-*-*-*-*-*-*-*-*
+gap_x 5
+gap_y 60
+minimum_size 5 5
+net_avg_samples 2
+no_buffers yes
+out_to_console no
+out_to_stderr no
+extra_newline no
+own_window no
+own_window_class Conky
+own_window_type dock
+stippled_borders 0
+update_interval 2.0
+uppercase no
+use_spacer none
+show_graph_scale no
+show_graph_range no
+
+TEXT
+${time %A, %B %e, %H:%M} | up $uptime_short
+CPU ${cpubar 4,200}
+RAM ${membar 4,200}
+FS  ${fs_bar 4,200 /}
+$processes processes, $running_processes running
+Name              PID     CPU%   MEM%
+ ${top name 1} ${top pid 1} ${top cpu 1} ${top mem_res 1}
+ ${top name 2} ${top pid 2} ${top cpu 2} ${top mem_res 2}
+ ${top name 3} ${top pid 3} ${top cpu 3} ${top mem_res 3}
+ ${top name 4} ${top pid 4} ${top cpu 4} ${top mem_res 4}
+Net ${exec netstat -bni -w 1 -c 1 | awk 'NR == 3 { printf("%.2fM %.2fM", $(NF)/(1024*1024), $(NF-1)/(1024*1024)); }'}
+
+-- /var/log/messages ------------------------
+${exec tail -15 /var/log/messages | awk '{print substr($0, 8, 5) substr($0, 20);}'}
+
+-- /var/log/daemon --------------------------
+${exec tail -15 /var/log/daemon | awk '{print substr($0, 8, 5) substr($0, 20);}'}

@@ -6,6 +6,7 @@ install:
 	cp .Xresources ~
 	cp .Xresources_solarized_dark ~
 	cp .Xresources_solarized_light ~
+	cp .conkyrc ~
 	cp .cwmrc ~
 	cp .dircolors ~
 	cp .gvimrc ~
