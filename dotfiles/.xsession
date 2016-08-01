@@ -8,8 +8,11 @@ setxkbmap -layout lv,ru -variant ,winkeys -option grp:caps_toggle -option grp_le
 xset b off
 xset r rate 400 50
 xmodmap ~/.Xmodmap
-xsetroot -solid black
 synclient `cat ~/.synclient`
+xsetroot -solid black
+display -window root ~/misc/wallpapers/sombrero.png
+xset +fp /usr/local/share/fonts/artwiz-aleczapka
+conky -x 0 -y 0 -w `xdpyinfo | awk '/root window id/{ print $4 }'`
 
 eval `ssh-agent`
 ssh-add ~/.ssh/*_rsa

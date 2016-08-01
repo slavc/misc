@@ -3,6 +3,7 @@ moveamount 8
 snapdist 8
 bind M-F1 "xbacklight -dec 5"
 bind M-F2 "xbacklight -inc 5"
+bind M-F10 "mixerctl inputs.dac-2:3_mute=toggle"
 bind M-F11 "volume.sh -"
 bind M-F12 "volume.sh +"
 bind M-Prior "volume.sh +"
@@ -19,5 +20,5 @@ bind CM-o "i3lock"
 color menubg rgb:00/2b/36
 color menufg rgb:83/94/96
 color font rgb:83/94/96
-color inactiveborder rgb:58/6e/75
-color activeborder rgb:93/a1/a1
+color activeborder rgb:58/6e/75
+color inactiveborder rgb:93/a1/a1
