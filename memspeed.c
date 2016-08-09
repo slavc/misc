@@ -11,29 +11,29 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define SIZE		100 /* MiB */
+#define SIZE		1000 /* MiB */
 #define USEC_IN_SEC	1000000.0
 
 static void
-memread(uint8_t *ptr, size_t size)
+memread(volatile uint8_t *ptr, size_t size)
 {
-	unsigned	 sum = 0;
+	volatile unsigned	 sum = 0;
 
 	while (size--)
 		sum = *ptr++;
 }
 
 static void
-memwrite(uint8_t *ptr, size_t size)
+memwrite(volatile uint8_t *ptr, size_t size)
 {
-	unsigned	 count = 0;
+	volatile unsigned	 count = 0;
 
 	while (size--)
 		*ptr++ = (uint8_t)count++;
 }
 
 static double
-measure(void (*func)(uint8_t *, size_t), uint8_t *ptr, size_t size)
+measure(void (*func)(volatile uint8_t *, size_t), volatile uint8_t *ptr, size_t size)
 {
 	struct timeval	 t1;
 	struct timeval	 t2;
@@ -60,7 +60,7 @@ measure(void (*func)(uint8_t *, size_t), uint8_t *ptr, size_t size)
 int
 main(int argc, char **argv)
 {
-	uint8_t		*ptr;
+	volatile uint8_t	*ptr;
 	size_t		 size = 1024 * 1024 * SIZE;
 	double		 speed;
 
@@ -68,7 +68,7 @@ main(int argc, char **argv)
 	if (ptr == NULL)
 		return -1;
 
-	printf("Read: %.1f MiB/s\n", measure(memread, ptr, size));
+	printf("Read:  %.1f MiB/s\n", measure(memread, ptr, size));
 	printf("Write: %.1f MiB/s\n", measure(memwrite, ptr, size));
 
 	return 0;
