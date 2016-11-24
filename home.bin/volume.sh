@@ -42,10 +42,10 @@ case "$os" in
 *freebsd*)
     case "$1" in
     +)
-	mixer -s vol -2
+	mixer -s vol +2
 	;;
     -)
-	mixer -s vol +2
+	mixer -s vol -2
 	;;
     *)
 	err 1 unknown command
