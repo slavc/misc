@@ -1,6 +1,6 @@
 #!/bin/sh
 
-os=`uname -o | tr A-Z a-z`
+os=`uname -s | tr A-Z a-z`
 
 err() {
     exitcode=$1
@@ -29,7 +29,7 @@ case "$os" in
 *openbsd*)
     case "$1" in
     +)
-        mixerctl -q outputs.hp=+1
+        mixerctl -q outputs.hp=+10
         ;;
     -)
         mixerctl -q outputs.hp=-10
