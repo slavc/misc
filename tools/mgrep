@@ -8,7 +8,7 @@
 GREP_ARGS="-n"
 PROMPT_STRING="mgrep> "
 NORMAL_IFS="$IFS"
-SPECIAL_IFS=`echo -ne '\036'`
+SPECIAL_IFS=`printf '\036'`
 
 prog=${0##*/}
 
