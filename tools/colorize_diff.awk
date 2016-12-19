@@ -45,18 +45,23 @@ BEGIN {
     need_reset = 0;
 }
 
+# Name of changed file / old name of file.
+/^--- / {
+    set_attrs(BOLD, WHITE, MAGENTA);
+}
+
 # Name of changed file / name of new file.
-/^\+\+\+/ {
+/^\+\+\+ / {
     set_attrs(BOLD, WHITE, BLUE);
 }
 
 # Lines which have been added.
-/^\+[^+]/ {
+/^\+[^+]/ || /^\+$/ {
     set_attrs(BOLD, WHITE, GREEN);
 }
 
 # Lines which have been removed.
-/^-[^-]/ {
+/^-[^-]/ || /^-$/ {
     set_attrs(BOLD, WHITE, RED);
 }
 
