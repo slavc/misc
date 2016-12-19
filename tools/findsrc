@@ -14,13 +14,16 @@ case "$0" in
     searchexpr="-iname '*.c'    \
         -o -iname '*.h'         \
         -o -iname '*.cpp'       \
+        -o -iname '*.cc'        \
         -o -iname '*.hpp'       \
         -o -iname '*.cxx'       \
         -o -iname '*.hxx'       \
         -o -iname '*.java'      \
         -o -iname '*.py'        \
         -o -iname '*.s'         \
-        -o -iname '*.inc'"
+        -o -iname '*.inc'       \
+        -o -iname '*.go'        \
+        -o -iname '*.php'"
     ;;
 *findmak)
     searchexpr="-iname '*cmakelists*'   \
