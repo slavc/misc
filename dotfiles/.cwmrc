@@ -17,8 +17,8 @@ borderwidth 1
 bind M-period unmap
 bind M-comma ssh
 bind CM-o "i3lock"
-color menubg rgb:00/2b/36
-color menufg rgb:83/94/96
-color font rgb:83/94/96
+#color menubg rgb:00/2b/36
+#color menufg rgb:83/94/96
+#color font rgb:83/94/96
 color activeborder rgb:58/6e/75
 color inactiveborder rgb:93/a1/a1

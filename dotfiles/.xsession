@@ -1,7 +1,7 @@
 #!/bin/sh
 
 xrdb -merge ~/.Xresources
-xrdb -merge ~/.Xresources_solarized_dark
+xrdb -merge ~/.Xresources_solarized_light
 xrdb -merge ~/.Xresources.local
 xset dpms 0 0 600
 setxkbmap -layout lv,ru -variant ,winkeys -option grp:caps_toggle -option grp_led:caps
@@ -16,6 +16,9 @@ xsetroot -solid black
 xset +fp /usr/local/share/fonts/artwiz-aleczapka
 conky -x 0 -y 0 -w `xdpyinfo | awk '/root window id/{ print $4 }'`
 
+if [ -x /usr/libexec/openssh/ssh-askpass ]; then
+	export SSH_ASKPASS=/usr/libexec/openssh/ssh-askpass
+fi
 eval `ssh-agent`
 ssh-add ~/.ssh/*_rsa
 

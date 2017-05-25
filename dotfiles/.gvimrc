@@ -1,5 +1,5 @@
 source ~/.vimrc
-set gfn=Terminus\ 9
+set gfn=DejaVu\ Sans\ Mono\ 9
 set bg=light
 colorscheme solarized
 set guioptions+=c " console dialogs for simple choices
