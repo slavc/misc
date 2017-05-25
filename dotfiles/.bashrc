@@ -5,12 +5,10 @@ if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
 
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
+
 # User specific aliases and functions
-
-GVIM_SERVER=GVIM_$$
-export GVIM_SERVER 
-
-alias cu='cu -p com'
 
 attach_gvim() {
     export GVIM_SERVER=`xprop | grep '^WM_NAME' | sed 's/.*\(GVIM_[[:digit:]]*\).*/\1/g'`
