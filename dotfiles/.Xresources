@@ -2,9 +2,14 @@ Xft.dpi:        96
 Xft.antialias:  true
 Xft.rgba:       rgb
 Xft.hinting:    true
-Xft.hintstyle:  hintslight
+Xft.hintstyle:  hintfull
 XLock.mode: blank
 XTerm*loginShell: true
 XTerm*scrollBar: false
 XTerm*saveLines: 2048
 XTerm*internalBorder: 1
+XTerm*sessionMgt: false
+!XTerm*background: MidnightBlue
+XTerm*background: black
+XTerm*foreground: SlateGray1
+XTerm*faceName: Terminus:size=12
