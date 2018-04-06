@@ -60,6 +60,8 @@ List/delete tracks in MP4 file.
 Plasma special effect implementation.
 ### pong.sh
 PONG game written in bash.
+### prompt/
+Small C program which draws a horizontal ruler style command prompt in bash.
 ### renamefat32compat.c
 Rename file system trees so they can be copied onto a FAT32 fs.
 ### shell.c
