@@ -17,4 +17,4 @@ $ PS1='$(prompt -f blue -b white \w\ \j%\t)\n'
 
 The result looks like this:
 
-![Screenshot demonstrating various prompt colors and styles.](https://raw.githubusercontent.com/S010/prompt/master/screenshot.png)
+![Screenshot demonstrating various prompt colors and styles.](https://raw.githubusercontent.com/slavc/misc/master/prompt/screenshot.png)
