@@ -7,7 +7,7 @@ Library of C routines.
 ### cupiechart/
 Piechart widget for GTK2.
 
-![Screenshot of cupiechart test program](https://raw.githubusercontent.com/S010/misc/master/cupiechart/screenshot.png)
+![Screenshot of cupiechart test program](https://raw.githubusercontent.com/slavc/misc/master/cupiechart/screenshot.png)
 ### cxxcgi/
 POC of C++ look-alike to Java Server Pages.
 ### dotfiles/
@@ -53,13 +53,15 @@ Adds the ability to use phpBB style emoticons when posting or commenting on Live
 ### mandelbrot.c
 Visualization of the [Mandelbrot Set](http://en.wikipedia.org/wiki/Mandelbrot_set).
 
-![Screenshot of the Mandelbrot Set visualzation](https://raw.githubusercontent.com/S010/misc/master/mandelbrot.png)
+![Screenshot of the Mandelbrot Set visualzation](https://raw.githubusercontent.com/slavc/misc/master/mandelbrot.png)
 ### mp4tracks.cpp
 List/delete tracks in MP4 file.
 ### plasma.c
 Plasma special effect implementation.
 ### pong.sh
 PONG game written in bash.
+
+![Screenshot of pong.sh](https://raw.githubusercontent.com/slavc/misc/master/pong_screenshot.png)
 ### prompt/
 Small C program which draws a horizontal ruler style command prompt in bash.
 ### renamefat32compat.c
@@ -68,6 +70,8 @@ Rename file system trees so they can be copied onto a FAT32 fs.
 Primitive shell.
 ### snake.sh
 Snake game written in bash.
+
+![Screenshot of snake.sh](https://raw.githubusercontent.com/slavc/misc/master/snake_screenshot.png)
 ### sp12.c
 Firmware flasher for some Atmel uControllers. Uses the LPT port.
 ### synth.c
