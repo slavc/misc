@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Webscruffy</title>
+		<style type="text/css">
+			div {
+				padding: 1em;
+			}
+
+			div.left {
+				float: left;
+			}
+
+			input.url {
+				min-width: 15em;
+			}
+		</style>
+		<script type="text/javascript">
+			var textarea = null;
+			var input = null;
+			var img = null;
+			var radioSeq = null;
+			var timer = null;
+			var expr = '';
+
+			function $(id) {
+				return document.getElementById(id);
+			}
+
+			function onLoad() {
+				textarea = $('textarea');
+				img = $('img');
+				input = $('input');
+				radioSeq = $('radioSeq');
+				updateImgSrc();
+			}
+
+			function onKeyPress() {
+				window.clearTimeout(timer);
+				timer = window.setTimeout(updateImgSrc, 1500);
+			}
+
+			function updateImgSrc(force) {
+				txt = textarea.value.trim();
+				txt = txt.replace(/[\n]+/g, ',');
+				if (!force && txt == expr && img.getAttribute('src') != '')
+					return;
+				expr = txt;
+
+				var type = 'class';
+				if (radioSeq.checked)
+					type = 'seq';
+
+				var url = document.documentURI.replace(/\/static\//, "/");
+				if (url[url.length - 1] != '/')
+					url += '/';
+				var src = url + type + '/' + expr + '.png';
+
+				img.setAttribute('src', src);
+				input.value = src;
+			}
+		</script>
+	</head>
+	<body onload="onLoad();">
+		<h1>Webscruffy</h1>
+		<p>Type some <a href="https://github.com/aivarsk/scruffy">yUML</a> below.</p>
+		<div class="left">
+			<p><textarea id="textarea" cols="60" rows="20" onkeypress="onKeyPress();"></textarea></p>
+			<p>
+				<input id="radioClass" name="diagramType" type="radio" value="class" checked="true" onclick="updateImgSrc(true);">Class</input>
+				<input id="radioSeq" name="diagramType" type="radio" value="seq" onclick="updateImgSrc(true);">Sequence</input>
+			</p>
+		</div>
+		<div class="left">
+			<p><input id="input" class="url" type="text" size="70" readonly="true" onclick="this.select();"/></p>
+			<p><img id="img" src=""/></p>
+		</div>
+	</body>
+</html>
