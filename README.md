@@ -89,6 +89,10 @@ Convert a time_t value into a human readable date.
 ### WebScreenStream
 Start up an HTTP server which serves a "stream" of fullscreen screenshots with
 an interval of ~500ms.
+### webscruffy
+A caching web server for [scruffy](https://github.com/aivarsk/scruffy).
+
+![Screenshot of Webscruffy's UI](https://raw.githubusercontent.com/slavc/misc/master/webscruffy/screenshot.png)
 ### xptrclick.c
 X11 program which emulates a mouse click.
 ### xsetbg.c
