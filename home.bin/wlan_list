@@ -1,0 +1,74 @@
+#!/usr/bin/python
+#
+# Print a simple list of WLANs detected by the given wlan interface and WiFi
+# channel usage statistics.
+#
+
+import os
+import sys
+
+def parse_ch(s):
+    return int(s.split(':')[1])
+
+def parse_level(s):
+    return int(s.split('=')[2][:-4])
+
+def parse_enc(s):
+    return s.split(':')[1][:2] == 'on'
+
+def parse_essid(s):
+    return s.split(':')[1]
+
+def fetch_wlan_list(wlan):
+    p = os.popen("sudo iwlist %s scanning | grep -e Channel: -e 'Signal level' -e 'Encryption key:' -e ESSID: | sed 's/^[ ]*//g;s/[ \\n]*$//g'" % wlan)
+    lines = p.read().split('\n')
+    p.close()
+    wlans = []
+    num = len(lines) - (len(lines)%4)
+    for i in range(0, num, 4):
+        wlan = {}
+        wlan['ch'] = parse_ch(lines[i+0])
+        wlan['level'] = parse_level(lines[i+1])
+        wlan['enc'] = parse_enc(lines[i+2])
+        wlan['essid'] = parse_essid(lines[i+3])
+        wlans.append(wlan)
+    return wlans
+
+def print_wlans(wlans, key_func = None):
+    print('WLANs:')
+    for wlan in sorted(wlans, key = key_func):
+        enc_flag = 'E' # encrypted
+        if not wlan['enc']:
+            enc_flag = 'O' # open
+        print('  Ch %3d %3d dBm %s %s' % (wlan['ch'], wlan['level'], enc_flag, wlan['essid']))
+
+def by_level(wlan):
+    return -wlan['level']
+
+def print_ch_stats(wlans):
+    print('\nChannel usage:')
+    chs = {}
+    for wlan in wlans:
+        ch = wlan['ch']
+        if ch in chs:
+            chs[ch] += 1
+        else:
+            chs[ch] = 1
+    chs = [{'id': k, 'load': v} for k, v in chs.items()]
+    for ch in sorted(chs, key = lambda x: x['load'], reverse = True):
+        print('  Ch %3d %3d APs' % (ch['id'], ch['load']))
+
+def usage():
+    print('usage: %s <wlan inteface>' % sys.argv[0])
+
+if len(sys.argv) < 2:
+    usage()
+    sys.exit(0)
+try:
+    wlans = fetch_wlan_list(sys.argv[1])
+    print_wlans(wlans, by_level)
+    print_ch_stats(wlans)
+except:
+    usage()
+    sys.exit(1)
+

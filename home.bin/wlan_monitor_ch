@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+# Enable monitor mode on the given wlan interface and tune to the given WiFi
+# radio channel.
+#
+
+usage() {
+	echo "usage: $0 <wlan interface> <channel>"
+	exit 1
+}
+
+wlan=$1
+ch=$2
+
+if [ "$wlan" = "" ] || [ "$ch" = "" ]; then
+	usage
+fi
+
+set -e
+
+sudo ip link set down $wlan
+sudo iwconfig $wlan mode monitor
+sudo ip link set up $wlan
+sudo iwconfig $wlan channel $ch

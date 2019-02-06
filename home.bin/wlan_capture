@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# Do a packet capture on the given wlan interface on the given WiFi radio
+# channel, outputing to a file with an optional prefix.
+# Requires `wlan_monitor_ch`.
+#
+
+usage() {
+	"usage: $0 <wlan interface> <channel> [<pcap filename prefix>]"
+}
+
+wlan=$1
+ch=$2
+file_prefix=$3
+if [ "$file_prefix" != "" ]; then
+	file_prefix="${file_prefix}_"
+fi
+file_name="${file_prefix}${wlan}_ch${ch}_`date +'%Y-%m-%d_%H:%M:%S'`.pcap"
+
+if [ "$wlan" = "" ] || [ "$ch" = "" ]; then
+	usage
+fi
+
+wlan_monitor_ch "$wlan" $ch
+exec sudo tcpdump -w "$file_name" -i "$wlan"
