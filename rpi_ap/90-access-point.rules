@@ -1,0 +1,2 @@
+ACTION=="add", SUBSYSTEM=="net", DEVPATH=="*/net/usb0", PROGRAM=="/root/apctl.sh start"
+ACTION=="remove", SUBSYSTEM=="net", DEVPATH=="*/net/usb0", PROGRAM=="/root/apctl.sh stop"
