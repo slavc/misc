@@ -1,0 +1,2 @@
+Install wpa_supplicant and hostapd, apply the configuration in this directory,
+modifying as needed and run root/setup_ap.sh.
