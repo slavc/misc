@@ -14,7 +14,7 @@ class Forecast:
         pass
 
     def __str__(self):
-        return '%.0fC %.0f%s %.0f%% %.0f%%' % (self.temp, self.wind_speed, self.wind_dir, self.humidity, self.precip)
+        return '%.0f\xdfC %.0f%s %.0fH %.0fP' % (self.temp, self.wind_speed, self.wind_dir, self.humidity, self.precip)
 
 def fetch_forecast():
     try:
