@@ -64,7 +64,7 @@ class InfoDisplay:
 
     def print_forecast(self):
         text = '%s' % self.forecast
-        text += (16-len(text))*' ' # pad with spaces on right
+        text += (CHARS_PER_LINE-len(text))*' ' # pad with spaces on right
         self.lcd.printline(2, text)
 
     def print_time(self):
