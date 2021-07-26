@@ -65,13 +65,13 @@ for x in \
 	'org.gnome.settings-daemon.plugins.color night-light-enabled true' \
 	'org.gnome.desktop.wm.preferences focus-mode mouse' \
 	'org.gnome.desktop.interface font-antialiasing rgba' \
-	"org.gnome.desktop.interface document-font-name \'Droid Sans 11\'" \
-	"org.gnome.desktop.interface font-name \'Droid Sans 11\'" \
-	"org.gnome.desktop.interface monospace-font-name \'Droid Sans Mono 10\'" \
-	"org.gnome.desktop.wm.preferences titlebar-font \'Droid Sans Bold 11\'" \
+	"org.gnome.desktop.interface document-font-name 'Droid Sans 11'" \
+	"org.gnome.desktop.interface font-name 'Droid Sans 11'" \
+	"org.gnome.desktop.interface monospace-font-name 'Droid Sans Mono 10'" \
+	"org.gnome.desktop.wm.preferences titlebar-font 'Droid Sans Bold 11'" \
 	"org.gnome.desktop.peripherals.touchpad tap-to-click true" 
 do
-		gsettings set $x
+		eval gsettings set $x
 done
 
 # Tune various software
