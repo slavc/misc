@@ -1,0 +1,3 @@
+   menubar, .menubar {
+     -GtkWidget-window-dragging: false;
+   }
