@@ -1,5 +1,14 @@
 #!/bin/bash
 
+fatal() {
+	echo "${0##*/}: error: $@"
+	exit 1
+}
+
+if [ `id -u` -eq 0 ]; then
+	fatal this script must be run as the target user, not root
+fi
+
 # Install packages
 
 sudo dnf -y upgrade
