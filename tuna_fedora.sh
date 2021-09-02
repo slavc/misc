@@ -67,7 +67,8 @@ if lsmod | grep i915 >/dev/null 2>&1; then
 		libva-intel-driver \
 		libva-intel-hybrid-driver \
 		gstreamer1-vaapi \
-		intel-media-driver
+		intel-media-driver \
+		igt-gpu-tools
 fi
 
 # Visual Studio Code
