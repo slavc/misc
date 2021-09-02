@@ -59,7 +59,8 @@ sudo dnf -y install \
 	libva-utils \
 	ffmpeg \
 	libva \
-	unbound
+	unbound \
+	transmission
 
 if lsmod | grep i915 >/dev/null 2>&1; then
 	sudo dnf -y install \
