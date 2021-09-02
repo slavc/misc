@@ -9,7 +9,17 @@ if [ `id -u` -eq 0 ]; then
 	fatal this script must be run as the target user, not root
 fi
 
+if ! sudo true; then
+	exit $?
+fi
+
 # Install packages
+
+sudo dnf -y install \
+	https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+	https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+
+sudo dnf makecache
 
 sudo dnf -y upgrade
 sudo dnf -y install \
@@ -44,7 +54,20 @@ sudo dnf -y install \
 	wireshark \
 	virt-manager \
 	gnome-shell-extension-freon \
-	geeqie
+	geeqie \
+	vlc \
+	libva-utils \
+	ffmpeg \
+	libva \
+	unbound
+
+if lsmod | grep i915 >/dev/null 2>&1; then
+	sudo dnf -y install \
+		libva-intel-driver \
+		libva-intel-hybrid-driver \
+		gstreamer1-vaapi \
+		intel-media-driver
+fi
 
 # Visual Studio Code
 
@@ -104,3 +127,4 @@ git config --global core.editor vim
 if ! [ -f ~/.ssh/id_rsa ]; then
 	ssh-keygen -q -f ~/.ssh/id_rsa -C 'sviatoslav.chagaev@gmail.com'
 fi
+
