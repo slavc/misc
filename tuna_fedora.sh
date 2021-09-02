@@ -128,3 +128,12 @@ if ! [ -f ~/.ssh/id_rsa ]; then
 	ssh-keygen -q -f ~/.ssh/id_rsa -C 'sviatoslav.chagaev@gmail.com'
 fi
 
+sudo systemctl enable unbound.service
+sudo systemctl start unbound.service
+sudo rm -f /etc/resolv.conf
+sudo tee -a /etc/resolv.conf >/dev/null << EOF
+nameserver 127.0.0.1
+options edns0 trust-ad
+search home
+EOF
+
