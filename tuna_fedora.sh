@@ -60,7 +60,10 @@ sudo dnf -y install \
 	ffmpeg \
 	libva \
 	unbound \
-	transmission
+	openssl \
+	transmission \
+	gnome-extensions-app \
+	gnome-shell-extension-freon
 
 if lsmod | grep i915 >/dev/null 2>&1; then
 	sudo dnf -y install \
@@ -132,10 +135,17 @@ fi
 
 sudo systemctl enable unbound.service
 sudo systemctl start unbound.service
+
+sudo rm -f /etc/NetworkManager/conf.d/90-dns-none.conf
+sudo tee -a /etc/NetworkManager/conf.d/90-dns-none.conf >/dev/null <<EOF
+[main]
+dns=none
+EOF
+sudo systemctl reload NetworkManager
+
 sudo rm -f /etc/resolv.conf
 sudo tee -a /etc/resolv.conf >/dev/null << EOF
 nameserver 127.0.0.1
 options edns0 trust-ad
 search home
 EOF
-
