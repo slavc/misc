@@ -65,6 +65,8 @@ sudo dnf -y install \
 	gnome-extensions-app \
 	gnome-shell-extension-freon
 
+sudo usermod -a -G wireshark `id -n -u`
+
 if lsmod | grep i915 >/dev/null 2>&1; then
 	sudo dnf -y install \
 		libva-intel-driver \
