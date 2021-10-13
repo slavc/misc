@@ -63,7 +63,8 @@ sudo dnf -y install \
 	openssl \
 	transmission \
 	gnome-extensions-app \
-	gnome-shell-extension-freon
+	gnome-shell-extension-freon \
+	fuse-sshfs
 
 sudo usermod -a -G wireshark `id -n -u`
 
