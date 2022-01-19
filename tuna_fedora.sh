@@ -64,9 +64,13 @@ sudo dnf -y install \
 	transmission \
 	gnome-extensions-app \
 	gnome-shell-extension-freon \
-	fuse-sshfs
+	fuse-sshfs \
+	sdcc \
+	sdcc-libc-sources
 
 sudo usermod -a -G wireshark `id -n -u`
+
+pip3 install stcgal
 
 if lsmod | grep i915 >/dev/null 2>&1; then
 	sudo dnf -y install \
