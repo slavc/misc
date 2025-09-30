@@ -37,6 +37,7 @@ sudo apt -y install \
 	gnome-tweaks \
 	golang \
 	llvm \
+	lm-sensors \
 	minicom \
 	nmap \
 	nmon \
