@@ -160,8 +160,11 @@ EOF
 sudo systemctl enable unbound.service
 sudo systemctl restart unbound.service
 
-conn_id=$(nmcli -f uuid,device connection | grep enx | awk '{ print $1 }')
-sudo nmcli connection modify $conn_id ipv4.ignore-auto-dns yes
-sudo nmcli connection modify $conn_id ipv4.dns "127.0.0.1"
-sudo nmcli connection modify $conn_id ipv6.ignore-auto-dns yes
-sudo nmcli connection modify $conn_id ipv6.dns "::1"
+#
+# Use local Unbound as DNS server.
+#
+
+sudo sed -i 's/^#DNS=.*/DNS=127.0.0.1 ::1/g' /etc/systemd/resolved.conf
+sudo sed -i 's/^#DNSSEC=.*/DNSSEC=yes/g' /etc/systemd/resolved.conf
+
+sudo systemctl restart systemd-resolved
