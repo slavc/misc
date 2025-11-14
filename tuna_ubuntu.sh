@@ -57,6 +57,7 @@ sudo apt -y install \
 	vlc \
 	wireshark \
 	wxmaxima \
+	xchm \
 
 #
 # Visual Studio Code
@@ -101,11 +102,29 @@ set -g mouse on
 EOF
 
 cat > ~/.vimrc << EOF
+filetype plugin on
 set bg=dark
 set hlsearch
 set incsearch
 set ai
 set ic
+EOF
+
+mkdir -p ~/.vim/ftdetect
+mkdir -p ~/.vim/ftplugin
+
+cat > ~/.vim/ftdetect/cpp.vim << EOF
+autocmd BufRead,BufNewFile *.hpp setfiletype cpp
+autocmd BufRead,BufNewFile *.cpp setfiletype cpp
+autocmd BufRead,BufNewFile *.cc setfiletype cpp
+EOF
+
+cat > ~/.vim/ftplugin/cpp.vim << EOF
+set autoindent
+set expandtab
+set shiftwidth=4
+set softtabstop=4
+set tabstop=4
 EOF
 
 sudo cp ~/.vimrc /root/
