@@ -22,51 +22,54 @@ sudo dnf -y install \
 sudo dnf makecache
 
 sudo dnf -y upgrade
-sudo dnf -y install \
-	vim \
-	vim-enhanced \
-	vim-X11 \
-	vim-go \
-	vim-golint \
-	tmux \
-	nmap \
-	iperf3 \
-	nmon \
-	s-tui \
-	fuse-sshfs \
-	gcc \
+sudo dnf -y install --allowerasing \
 	clang \
-	llvm \
-	gdb \
 	cscope \
 	ctags \
-	gotags \
-	golang \
 	dpdk \
 	dpdk-devel \
 	dpdk-doc \
 	dpdk-tools \
-	terminus-fonts \
-	google-droid-fonts-all \
-	python3-numpy \
-	python3-matplotlib \
-	wxMaxima \
-	wireshark \
-	virt-manager \
-	gnome-shell-extension-freon \
-	geeqie \
-	vlc \
-	libva-utils \
 	ffmpeg \
-	libva \
-	unbound \
-	openssl \
-	transmission \
+	fuse-sshfs \
+	fuse-sshfs \
+	gcc \
+	gdb \
+	geeqie \
 	gnome-extensions-app \
 	gnome-shell-extension-freon \
-	fuse-sshfs \
+	gnome-shell-extension-freon \
+	golang \
+	google-droid-fonts-all \
+	gotags \
+	iperf3 \
+	libva \
+	libva-utils \
+	llvm \
+	nmap \
+	nmon \
+	minicom \
+	openssl \
+	python3-matplotlib \
+	python3-numpy \
+	python3-pip \
+	s-tui \
 	sdcc \
-	sdcc-libc-sources
+	sdcc-libc-sources \
+	terminus-fonts \
+	tmux \
+	transmission \
+	unbound \
+	vim \
+	vim-X11 \
+	vim-enhanced \
+	vim-go \
+	vim-golint \
+	virt-manager \
+	vlc \
+	wireshark \
+	wxMaxima \
+
 
 sudo usermod -a -G wireshark `id -n -u`
 
@@ -101,19 +104,11 @@ code --install-extension ms-vscode-remote.remote-ssh
 # Tune desktop
 
 for x in \
-	'org.gnome.desktop.interface gtk-theme Adwaita-dark' \
 	'org.gnome.settings-daemon.plugins.power idle-dim false' \
 	'org.gnome.desktop.session idle-delay 600' \
 	'org.gnome.desktop.interface clock-show-weekday true' \
-	'org.gnome.gedit.preferences.editor scheme cobalt' \
 	'org.gnome.settings-daemon.plugins.color night-light-enabled true' \
-	'org.gnome.desktop.wm.preferences focus-mode mouse' \
-	'org.gnome.desktop.interface font-antialiasing rgba' \
-	"org.gnome.desktop.interface document-font-name 'Droid Sans 11'" \
-	"org.gnome.desktop.interface font-name 'Droid Sans 11'" \
-	"org.gnome.desktop.interface monospace-font-name 'Droid Sans Mono 10'" \
-	"org.gnome.desktop.wm.preferences titlebar-font 'Droid Sans Bold 11'" \
-	"org.gnome.desktop.peripherals.touchpad tap-to-click true" 
+	'org.gnome.desktop.wm.preferences focus-mode mouse'
 do
 		eval gsettings set $x
 done
