@@ -59,100 +59,13 @@ sudo apt -y install \
 	wxmaxima \
 	xchm \
 
-#
-# Visual Studio Code
-#
-
 if ! which code >/dev/null 2>&1; then
 	sudo snap install --classic code
 fi
 
-{
-	code --install-extension golang.go ;
-	code --install-extension ms-python.python ;
-	code --install-extension redhat.vscode-yaml ;
-	code --install-extension ms-vscode.cpptools ;
-	code --install-extension 42crunch.vscode-openapi ;
-	code --install-extension stkb.rewrap # rewrap text to 80 columns with Alt+q ;
-	code --install-extension ms-vscode-remote.remote-ssh ;
-} || true
-
 #
-# Tune desktop environment
-# 
-
-for x in \
-	'org.gnome.settings-daemon.plugins.power idle-dim false' \
-	'org.gnome.desktop.session idle-delay 600' \
-	'org.gnome.desktop.interface clock-show-weekday true' \
-	'org.gnome.settings-daemon.plugins.color night-light-enabled true' \
-	'org.gnome.desktop.wm.preferences focus-mode mouse' \
-	'org.gnome.desktop.interface font-antialiasing rgba' \
-	"org.gnome.desktop.peripherals.touchpad tap-to-click true" 
-do
-		eval gsettings set $x
-done
-
+# Use local Unbound as the DNS server.
 #
-# Tune software
-#
-
-cat > ~/.tmux.conf << EOF
-set -g mouse on
-EOF
-
-cat > ~/.vimrc << EOF
-filetype plugin on
-set bg=dark
-set hlsearch
-set incsearch
-set ai
-set ic
-EOF
-
-mkdir -p ~/.vim/ftdetect
-mkdir -p ~/.vim/ftplugin
-
-cat > ~/.vim/ftdetect/cpp.vim << EOF
-autocmd BufRead,BufNewFile *.hpp setfiletype cpp
-autocmd BufRead,BufNewFile *.cpp setfiletype cpp
-autocmd BufRead,BufNewFile *.cc setfiletype cpp
-EOF
-
-cat > ~/.vim/ftplugin/cpp.vim << EOF
-set autoindent
-set expandtab
-set shiftwidth=4
-set softtabstop=4
-set tabstop=4
-EOF
-
-sudo cp ~/.vimrc /root/
-sudo chown root:root /root/.vimrc
-
-cat > ~/.gvimrc << EOF
-set ic
-set belloff=all
-set nowrap
-
-colorscheme industry
-
-set guifont=Terminus\ (TTF)\ 12
-set guioptions=aegit
-
-set cursorline
-set colorcolumn=80
-highlight CursorLine guibg=grey10
-highlight ColorColumn guibg=grey10
-EOF
-
-git config --global user.email 'sviatoslav.chagaev@gmail.com'
-git config --global user.name 'Sviatoslav Chagaev'
-git config --global core.editor vim
-
-if ! [ -f ~/.ssh/id_rsa ]; then
-	ssh-keygen -q -f ~/.ssh/id_rsa -C 'sviatoslav.chagaev@gmail.com'
-fi
 
 sudo tee /etc/unbound/unbound.conf.d/99-local.conf >/dev/null << EOF
 server:
@@ -178,10 +91,6 @@ EOF
 
 sudo systemctl enable unbound.service
 sudo systemctl restart unbound.service
-
-#
-# Use local Unbound as DNS server.
-#
 
 sudo sed -i 's/^#DNS=.*/DNS=127.0.0.1 ::1/g' /etc/systemd/resolved.conf
 sudo sed -i 's/^#DNSSEC=.*/DNSSEC=yes/g' /etc/systemd/resolved.conf

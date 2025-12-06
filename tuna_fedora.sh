@@ -13,7 +13,9 @@ if ! sudo true; then
 	exit $?
 fi
 
+#
 # Install packages
+#
 
 sudo dnf -y install \
 	https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
@@ -56,6 +58,7 @@ sudo dnf -y install --allowerasing \
 	s-tui \
 	sdcc \
 	sdcc-libc-sources \
+	stb-devel \
 	terminus-fonts \
 	tmux \
 	transmission \
@@ -84,7 +87,9 @@ if lsmod | grep i915 >/dev/null 2>&1; then
 		igt-gpu-tools
 fi
 
-# Visual Studio Code
+# 
+# Install Visual Studio Code
+# 
 
 if ! which code >/dev/null 2>&1; then
 	sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
@@ -93,47 +98,31 @@ if ! which code >/dev/null 2>&1; then
 	sudo dnf -y install code
 fi
 
-code --install-extension golang.go
-code --install-extension ms-python.python
-code --install-extension redhat.vscode-yaml
-code --install-extension ms-vscode.cpptools
-code --install-extension 42crunch.vscode-openapi
-code --install-extension stkb.rewrap # rewrap text to 80 columns with Alt+q
-code --install-extension ms-vscode-remote.remote-ssh
+#
+# Use local Unbound as the DNS server.
+#
 
-# Tune desktop
+sudo tee /etc/unbound/conf.d/99-local.conf >/dev/null << EOF
+server:
 
-for x in \
-	'org.gnome.settings-daemon.plugins.power idle-dim false' \
-	'org.gnome.desktop.session idle-delay 600' \
-	'org.gnome.desktop.interface clock-show-weekday true' \
-	'org.gnome.settings-daemon.plugins.color night-light-enabled true' \
-	'org.gnome.desktop.wm.preferences focus-mode mouse'
-do
-		eval gsettings set $x
-done
+prefetch: yes
+harden-dnssec-stripped: yes
+cache-max-ttl: 14400
+cache-min-ttl: 11000
+aggressive-nsec: yes
+hide-identity: yes
+hide-version: yes
+use-caps-for-id: yes
 
-# Tune various software
-
-cat > ~/.tmux.conf << EOF
-set -g mouse on
+num-threads: 4
+msg-cache-slabs: 8
+rrset-cache-slabs: 8
+infra-cache-slabs: 8
+key-cache-slabs: 8
+rrset-cache-size: 256m
+msg-cache-size: 128m
+so-rcvbuf: 8m
 EOF
-
-cat > ~/.vimrc << EOF
-set bg=dark
-set hlsearch
-set incsearch
-set ai
-set ic
-EOF
-
-git config --global user.email 'sviatoslav.chagaev@gmail.com'
-git config --global user.name 'Sviatoslav Chagaev'
-git config --global core.editor vim
-
-if ! [ -f ~/.ssh/id_rsa ]; then
-	ssh-keygen -q -f ~/.ssh/id_rsa -C 'sviatoslav.chagaev@gmail.com'
-fi
 
 sudo systemctl enable unbound.service
 sudo systemctl start unbound.service
