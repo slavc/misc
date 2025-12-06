@@ -111,6 +111,9 @@ if ! [ -f ~/.ssh/id_rsa ]; then
 fi
 
 cat > ~/.my_bashrc << EOF
+export EDITOR=$(which vim)
+export LESS=RSi
+
 # Make it so Bash performs filename completion on `gv` (gvim client), `op`
 # (open file in appropriate app).
 complete -F _longopt gv
