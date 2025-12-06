@@ -30,7 +30,10 @@ for x in \
 	'org.gnome.settings-daemon.plugins.color night-light-enabled true' \
 	'org.gnome.desktop.wm.preferences focus-mode mouse' \
 	'org.gnome.desktop.interface font-antialiasing rgba' \
-	"org.gnome.desktop.peripherals.touchpad tap-to-click true" 
+	"org.gnome.desktop.peripherals.touchpad tap-to-click true" \
+	"org.gnome.desktop.input-sources mru-sources \"[('xkb', 'us')]\"" \
+	"org.gnome.desktop.input-sources sources \"[('xkb', 'us'), ('xkb', 'lv'), ('xkb', 'ru')]\"" \
+	"org.gnome.desktop.wm.keybindings toggle-fullscreen \"['<Super>F11']\""
 do
 		eval gsettings set $x
 done
