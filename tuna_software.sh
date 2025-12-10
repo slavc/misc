@@ -73,6 +73,8 @@ cat > ~/.vim/ftdetect/cpp.vim << EOF
 autocmd BufRead,BufNewFile *.hpp setfiletype cpp
 autocmd BufRead,BufNewFile *.cpp setfiletype cpp
 autocmd BufRead,BufNewFile *.cc setfiletype cpp
+autocmd BufRead,BufNewFile *.slang setfiletype cpp
+autocmd BufRead,BufNewFile *.cu setfiletype cpp
 EOF
 
 cat > ~/.vim/ftplugin/cpp.vim << EOF

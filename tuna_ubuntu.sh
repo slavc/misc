@@ -64,67 +64,6 @@ if ! which code >/dev/null 2>&1; then
 fi
 
 #
-# Tune software
-#
-
-cat > ~/.tmux.conf << EOF
-set -g mouse on
-EOF
-
-cat > ~/.vimrc << EOF
-filetype plugin on
-set bg=dark
-set hlsearch
-set incsearch
-set ai
-set ic
-EOF
-
-mkdir -p ~/.vim/ftdetect
-mkdir -p ~/.vim/ftplugin
-
-cat > ~/.vim/ftdetect/cpp.vim << EOF
-autocmd BufRead,BufNewFile *.hpp setfiletype cpp
-autocmd BufRead,BufNewFile *.cpp setfiletype cpp
-autocmd BufRead,BufNewFile *.cc setfiletype cpp
-EOF
-
-cat > ~/.vim/ftplugin/cpp.vim << EOF
-setlocal autoindent
-setlocal expandtab
-setlocal shiftwidth=4
-setlocal softtabstop=4
-setlocal tabstop=4
-EOF
-
-sudo cp ~/.vimrc /root/
-sudo chown root:root /root/.vimrc
-
-cat > ~/.gvimrc << EOF
-set ic
-set belloff=all
-set nowrap
-
-colorscheme industry
-
-set guifont=Terminus\ (TTF)\ 12
-set guioptions=aegit
-
-set cursorline
-set colorcolumn=80
-highlight CursorLine guibg=grey10
-highlight ColorColumn guibg=grey10
-EOF
-
-git config --global user.email 'sviatoslav.chagaev@gmail.com'
-git config --global user.name 'Sviatoslav Chagaev'
-git config --global core.editor vim
-
-if ! [ -f ~/.ssh/id_rsa ]; then
-	ssh-keygen -q -f ~/.ssh/id_rsa -C 'sviatoslav.chagaev@gmail.com'
-fi
-
-#
 # Use local Unbound as the DNS server.
 #
 
