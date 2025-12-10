@@ -58,6 +58,7 @@ sudo apt -y install \
 	wireshark \
 	wxmaxima \
 	xchm \
+	xclip \
 
 if ! which code >/dev/null 2>&1; then
 	sudo snap install --classic code
