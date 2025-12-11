@@ -38,6 +38,7 @@ sudo apt -y install \
 	golang \
 	llvm \
 	lm-sensors \
+	mdadm \
 	minicom \
 	nmap \
 	nmon \
