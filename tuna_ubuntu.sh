@@ -47,6 +47,7 @@ sudo apt -y install \
 	python3-numpy \
 	s-tui \
 	sshfs \
+	subversion \
 	tmux \
 	transmission-gtk \
 	unbound \
@@ -98,3 +99,44 @@ sudo sed -i 's/^#DNS=.*/DNS=127.0.0.1 ::1/g' /etc/systemd/resolved.conf
 sudo sed -i 's/^#DNSSEC=.*/DNSSEC=yes/g' /etc/systemd/resolved.conf
 
 sudo systemctl restart systemd-resolved
+
+#
+# Fix screen tearing when playing video on X.org + Nvidia.
+# 
+
+if [ -d /etc/X11/xorg.conf.d/ ] && lsmod | grep '\<nvidia>' >/dev/null; then
+	sudo tee /etc/X11/xorg.conf.d/99-no-screen-tearing.conf >/dev/null << EOF
+Section "Monitor"
+    # HorizSync source: edid, VertRefresh source: edid
+    Identifier     "Monitor0"
+    VendorName     "Unknown"
+    ModelName      "Samsung LU28R55"
+    HorizSync       30.0 - 135.0
+    VertRefresh     40.0 - 60.0
+    Option         "DPMS"
+EndSection
+
+Section "Device"
+    Identifier     "Device0"
+    Driver         "nvidia"
+    VendorName     "NVIDIA Corporation"
+    BoardName      "NVIDIA GeForce GTX 1080"
+EndSection
+
+Section "Screen"
+    Identifier     "Screen0"
+    Device         "Device0"
+    Monitor        "Monitor0"
+    DefaultDepth    24
+    Option         "Stereo" "0"
+    Option         "nvidiaXineramaInfoOrder" "HDMI-0"
+    Option         "metamodes" "nvidia-auto-select +0+0 {ForceCompositionPipeline=On, ForceFullCompositionPipeline=On}"
+    Option         "SLI" "Off"
+    Option         "MultiGPU" "Off"
+    Option         "BaseMosaic" "off"
+    SubSection     "Display"
+        Depth       24
+    EndSubSection
+EndSection
+EOF
+fi
