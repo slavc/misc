@@ -71,6 +71,7 @@ sudo dnf -y install --allowerasing \
 	vlc \
 	wireshark \
 	wxMaxima \
+	gqrx \
 
 
 sudo dnf -y remove PackageKit-command-not-found
