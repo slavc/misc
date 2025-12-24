@@ -73,7 +73,10 @@ sudo dnf -y install --allowerasing \
 	wxMaxima \
 
 
+sudo dnf -y remove PackageKit-command-not-found
+
 flatpak install -y jupyterlab
+flatpak install -y 'ascii draw'
 
 sudo usermod -a -G wireshark `id -n -u`
 
