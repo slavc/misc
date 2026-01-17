@@ -43,15 +43,15 @@ done
 # Tune software
 #
 
-# {
-# 	code --install-extension golang.go ;
-# 	code --install-extension ms-python.python ;
-# 	code --install-extension redhat.vscode-yaml ;
-# 	code --install-extension ms-vscode.cpptools ;
-# 	code --install-extension 42crunch.vscode-openapi ;
-# 	code --install-extension stkb.rewrap # rewrap text to 80 columns with Alt+q ;
-# 	code --install-extension ms-vscode-remote.remote-ssh ;
-# } || true
+{
+	code --install-extension golang.go ;
+	code --install-extension ms-python.python ;
+	code --install-extension redhat.vscode-yaml ;
+	code --install-extension ms-vscode.cpptools ;
+	code --install-extension 42crunch.vscode-openapi ;
+	code --install-extension stkb.rewrap # rewrap text to 80 columns with Alt+q ;
+	code --install-extension ms-vscode-remote.remote-ssh ;
+} || true
 
 cat > ~/.tmux.conf << EOF
 set -g mouse on
@@ -120,14 +120,14 @@ cat > ~/.my_bashrc << EOF
 export EDITOR=$(which vim)
 export LESS=RSi
 
-# Make it so Bash performs filename completion on `gv` (gvim client), `op`
+# Make it so Bash performs filename completion on gv (gvim client), op
 # (open file in appropriate app).
 complete -F _longopt gv
 complete -F _longopt op
 
 alias csc='cscope -Rq'
 
-source ~/src/vulkan_sdk/default/setup-env.sh || true
+source ~/src/vulkan_sdk/default/setup-env.sh >/dev/null 2>&1 || true
 EOF
 
 if ! grep 'my_bashrc' ~/.bashrc >/dev/null 2>&1; then

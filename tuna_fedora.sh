@@ -40,7 +40,6 @@ sudo dnf -y install --allowerasing \
 	geeqie \
 	gnome-extensions-app \
 	gnome-shell-extension-freon \
-	gnome-shell-extension-freon \
 	golang \
 	google-droid-fonts-all \
 	gotags \
@@ -48,9 +47,9 @@ sudo dnf -y install --allowerasing \
 	libva \
 	libva-utils \
 	llvm \
+	minicom \
 	nmap \
 	nmon \
-	minicom \
 	openssl \
 	python3-matplotlib \
 	python3-numpy \
@@ -73,6 +72,8 @@ sudo dnf -y install --allowerasing \
 	wireshark \
 	wxMaxima \
 
+
+flatpak install -y jupyterlab
 
 sudo usermod -a -G wireshark `id -n -u`
 
