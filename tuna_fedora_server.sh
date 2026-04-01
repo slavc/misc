@@ -113,6 +113,8 @@ fi
 case "$HOSTNAME" in 
 xinfotech | fx)
 	echo Applying special settings for host $HOSTNAME...
+	sudo systemctl disable firewalld
+	sudo systemctl stop firewalld
 	echo '%wheel        ALL=(ALL)       NOPASSWD: ALL' | sudo tee /etc/sudoers.d/passwordless-sudo >/dev/null
 	sudo grubby --update-kernel=ALL --args="mitigations=off" # Turn off CPU vulnerability mitigations to improve performance.
 	;;
