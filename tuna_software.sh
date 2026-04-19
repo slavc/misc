@@ -34,7 +34,9 @@ for x in \
 	"org.gnome.desktop.input-sources mru-sources \"[('xkb', 'us')]\"" \
 	"org.gnome.desktop.input-sources sources \"[('xkb', 'us'), ('xkb', 'lv'), ('xkb', 'ru')]\"" \
 	"org.gnome.desktop.wm.keybindings toggle-fullscreen \"['<Super>F11']\"" \
-	"org.gtk.gtk4.Settings.FileChooser sort-directories-first true"
+	"org.gtk.gtk4.Settings.FileChooser sort-directories-first true" \
+	"org.gnome.desktop.interface clock-format '24h'" \
+	"org.gtk.Settings.FileChooser clock-format '24h'"
 do
 		eval gsettings set $x
 done
