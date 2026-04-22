@@ -52,9 +52,9 @@ sudo apt -y install \
 case $HOSTNAME in
 prodesk | core)
 	echo Applying special settings for host $HOSTNAME...
-	echo '$GRUB_CMDLINE_LINUX_DEFAULT="${GRUB_CMDLINE_LINUX_DEFAULT} mitigations=off"' | sudo tee /etc/default/grub.d/10-disable-mitigations.cfg
+	echo 'GRUB_CMDLINE_LINUX_DEFAULT="${GRUB_CMDLINE_LINUX_DEFAULT} mitigations=off"' | sudo tee /etc/default/grub.d/10-disable-mitigations.cfg
 	sudo update-grub
 	sudo sed -i 's/^%sudo.*$/%sudo   ALL=(ALL:ALL) NOPASSWD: ALL/' /etc/sudoers
 	;;
 esac
-	
+
